@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="aliyun,ack,ask,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景Ask 是 K8S 的一种特殊扩展, 它屏蔽了 node 层, 按 pod 收费. 这样可以实现低成本和弹性扩容, 在大规模的伸缩中极大的增加了效率和降低了成本 弹性扩展, 用多少算多少, 听起来确实很美好. Ingress 本质上是一种抽象, 顾名思义, 就是所有请求的入口, 可以对请求进行控制和验证 常用的是 nginx 实现的 ingress, 通过规则映射, 将站点信息抽象各位一个个的">
+<meta name="keywords" content="aliyun,ack,ask">
+<meta property="og:type" content="article">
+<meta property="og:title" content="阿里云ASK踩坑记录">
+<meta property="og:url" content="https://zhiwei.show/2021/03/10/f38b2488baed4a5d88966be05d09d788/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="背景Ask 是 K8S 的一种特殊扩展, 它屏蔽了 node 层, 按 pod 收费. 这样可以实现低成本和弹性扩容, 在大规模的伸缩中极大的增加了效率和降低了成本 弹性扩展, 用多少算多少, 听起来确实很美好. Ingress 本质上是一种抽象, 顾名思义, 就是所有请求的入口, 可以对请求进行控制和验证 常用的是 nginx 实现的 ingress, 通过规则映射, 将站点信息抽象各位一个个的">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/36a1af3073e842f18e5fa62e110c67b5.png">
+<meta property="og:image" content="https://zhiwei.show/resource/6701222d063d42fca51249e4e79d87ff.png">
+<meta property="og:updated_time" content="2021-03-10T01:18:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="阿里云ASK踩坑记录">
+<meta name="twitter:description" content="背景Ask 是 K8S 的一种特殊扩展, 它屏蔽了 node 层, 按 pod 收费. 这样可以实现低成本和弹性扩容, 在大规模的伸缩中极大的增加了效率和降低了成本 弹性扩展, 用多少算多少, 听起来确实很美好. Ingress 本质上是一种抽象, 顾名思义, 就是所有请求的入口, 可以对请求进行控制和验证 常用的是 nginx 实现的 ingress, 通过规则映射, 将站点信息抽象各位一个个的">
+<meta name="twitter:image" content="https://zhiwei.show/resource/36a1af3073e842f18e5fa62e110c67b5.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/2021/03/10/f38b2488baed4a5d88966be05d09d788/">
+
+
+
+
+
+  <title>阿里云ASK踩坑记录 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/f38b2488baed4a5d88966be05d09d788/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">阿里云ASK踩坑记录</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T09:15:41+08:00">
+                2021-03-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Ask 是 K8S 的一种特殊扩展, 它屏蔽了 node 层, 按 pod 收费.</p>
+<p>这样可以实现低成本和弹性扩容, 在大规模的伸缩中极大的增加了效率和降低了成本</p>
+<p>弹性扩展, 用多少算多少, 听起来确实很美好.</p>
+<p>Ingress 本质上是一种抽象, 顾名思义, 就是所有请求的入口, 可以对请求进行控制和验证</p>
+<p>常用的是 nginx 实现的 ingress, 通过规则映射, 将站点信息抽象各位一个个的匹配规则</p>
+<p>接着, 我们有一个前端打点上报需求, 准备用阿里云的 ask 来做.</p>
+<p>只是一个很简单的通过 http 请求将数据上报至阿里云 SLS 的服务.</p>
+<p>没有状态, 存储之类的需求, 所以用 golang 写了一个简单的 api 来解决.</p>
+<p>万事俱备, 等待数据, 然而研发同学说不太对劲.</p>
+<a id="more"></a>
+<h1 id="tls-证书错误"><a href="#tls-证书错误" class="headerlink" title="tls 证书错误"></a>tls 证书错误</h1><p>直接甩了个错误给我看.</p>
+<p><img src="/resource/36a1af3073e842f18e5fa62e110c67b5.png" alt="d7233d8360b2c6a84ac4fcfd0bc0b6aa.png"></p>
+<p>一看这信息, 很明显是证书问题.</p>
+<p>然后想起, 好像确实没有在 ingress 里面配置证书.</p>
+<p>阿里云上的 ingress 可以直接在控制台添加证书信息.</p>
+<p>本质上是用了 ingress 的<code>nginx.ingress.kubernetes.io/auth-tls-secret</code>注解来实现</p>
+<p>直接在控制配置相关的 tls 信息即可, 然而现实很骨感.</p>
+<p>错误依旧… 难道是我打开的方式不对?</p>
+<p>再三检查发现后并没有发现错误, 没有办法.</p>
+<p>通过在浏览器里面直接访问域名, 提示证书不安全.</p>
+<p><img src="/resource/6701222d063d42fca51249e4e79d87ff.png" alt="985e414f3cdab51bb3663ac3959dd6cd.png"></p>
+<p>好家伙, 这是啥, <code>ingress controller fake certificate</code>, 明明已经指定了域名的证书.</p>
+<p>咋会出现这么个玩意, 看起来像是 ingress 自己生成的, 但是原生的 ingress 应该是不带这玩意的.</p>
+<p>百思不得其解啊, 最终发现 slb 居然是七层的负载均衡, 这就相当于其实客户端是和 slb 的七层负载均衡进行 tls 加密.</p>
+<p>然后对后端的服务进行了请求, 最终将内容返回给客户端, 所以直接在 slb 层配置证书后解决了问题.</p>
+<h1 id="CORS-问题"><a href="#CORS-问题" class="headerlink" title="CORS 问题"></a>CORS 问题</h1><p>然而现实还不肯放过我这个孩子.</p>
+<p>解决了 slb 后居然又出了一个新的问题, 就是 cors</p>
+<p>为了防止恶意攻击, 所以浏览器限制了客户端的请求.</p>
+<p>我们输入域名访问的站点是主站, 如果请求非主站的域名.</p>
+<p>需要返回<code>Access-Control-Allow-*</code>等信息, 来通知浏览器放行.</p>
+<p>所以我们需要在七层的负载均衡上提供相应的头信息.</p>
+<p>然而悲剧的是阿里云提供的七层负载均衡并不能自定义相关的头信息.</p>
+<h1 id="最终"><a href="#最终" class="headerlink" title="最终"></a>最终</h1><p>在和阿里云的同学沟通的确实七层的负载均衡无法提供自定义的头信息</p>
+<p>所以还是换回了 ack 使用, 而且 ask 的整个架构也和 ack 不太一样.</p>
+<p>ack 的数据流是这样的<code>client-&gt;slb-&gt;nodeport-&gt;ipvs-&gt;nginx-ingress-&gt;service</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1. client将数据发送给slb的TCP端口上</span><br><span class="line">2. slb将数据包转发给nodeport</span><br><span class="line">3. 数据通过nodeport进入ipvs</span><br><span class="line">4. ipvs再将数据通过不同的策略转给nginx-ingress的pod</span><br><span class="line">5. nginx-ingress最终对相应的反向代理请求service</span><br></pre></td></tr></table></figure>
+<p>ask 的数据流很简单<code>client-&gt;alb-ingress-&gt;service</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1. 客户端发送请求给alb-ingress</span><br><span class="line">2. alb-ingress通过eni直接进行反向代理请求service</span><br></pre></td></tr></table></figure>
+<p>这也就意味着 alb-ingress 和 service 的网络是互通的, 并且将路由信息直接注册到 alb-ingress 中.</p>
+<p>ask 方案性能最好, 没有过多的网络消耗, 但是无法兼容 nginx-ingress, 有些需求可能无法实现, 比如 cors</p>
+<p>ack 在性能上虽然不是最佳, 但胜在灵活性上, 可以兼容 nginx-ingress 注解灵活的对请求进行控制</p>
+<p>性能和灵活一直都在相爱相杀, 最终还是取决于业务场景.</p>
+<p>以上是我在使用阿里云的 ack 和 ask 碰到的问题和总结.</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/aliyun/" rel="tag"># aliyun</a>
+          
+            <a href="/tags/ack/" rel="tag"># ack</a>
+          
+            <a href="/tags/ask/" rel="tag"># ask</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/03/10/993b27b34e7a4165a667a75dcf128296/" rel="next" title="业务监控整理总结">
+                <i class="fa fa-chevron-left"></i> 业务监控整理总结
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/10/78b08057401441c8bd6c141f7665a0da/" rel="prev" title="使用openresty构建的外部测试网关">
+                使用openresty构建的外部测试网关 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">40</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#tls-证书错误"><span class="nav-number">2.</span> <span class="nav-text">tls 证书错误</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CORS-问题"><span class="nav-number">3.</span> <span class="nav-text">CORS 问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#最终"><span class="nav-number">4.</span> <span class="nav-text">最终</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

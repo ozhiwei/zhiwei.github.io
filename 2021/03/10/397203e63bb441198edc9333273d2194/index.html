@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="故障,saltstack,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景问题我们的运维平台是基于 SaltStack 封装的任务系统.在任务系统上将需要执行多个操作转为不同的 stateSaltStack 负责进行调度执行, Minion 执行完了之后, 会将数据结果返回给 master而 master 则将结果保存在 mongodb 里面, 看图">
+<meta name="keywords" content="故障,saltstack">
+<meta property="og:type" content="article">
+<meta property="og:title" content="有关SaltStack的State错误的执行在其他主机上">
+<meta property="og:url" content="https://zhiwei.show/2021/03/10/397203e63bb441198edc9333273d2194/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="背景问题我们的运维平台是基于 SaltStack 封装的任务系统.在任务系统上将需要执行多个操作转为不同的 stateSaltStack 负责进行调度执行, Minion 执行完了之后, 会将数据结果返回给 master而 master 则将结果保存在 mongodb 里面, 看图">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/0b24e2e92df44e9e936c148fe46465f7.png">
+<meta property="og:image" content="https://zhiwei.show/resource/58b9c29a78f743409de73243f6090d42.png">
+<meta property="og:updated_time" content="2021-03-10T01:26:49.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="有关SaltStack的State错误的执行在其他主机上">
+<meta name="twitter:description" content="背景问题我们的运维平台是基于 SaltStack 封装的任务系统.在任务系统上将需要执行多个操作转为不同的 stateSaltStack 负责进行调度执行, Minion 执行完了之后, 会将数据结果返回给 master而 master 则将结果保存在 mongodb 里面, 看图">
+<meta name="twitter:image" content="https://zhiwei.show/resource/0b24e2e92df44e9e936c148fe46465f7.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/2021/03/10/397203e63bb441198edc9333273d2194/">
+
+
+
+
+
+  <title>有关SaltStack的State错误的执行在其他主机上 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/397203e63bb441198edc9333273d2194/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">有关SaltStack的State错误的执行在其他主机上</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T09:25:04+08:00">
+                2021-03-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景问题"><a href="#背景问题" class="headerlink" title="背景问题"></a>背景问题</h1><p>我们的运维平台是基于 SaltStack 封装的任务系统.<br>在任务系统上将需要执行多个操作转为不同的 state<br>SaltStack 负责进行调度执行, Minion 执行完了之后, 会将数据结果返回给 master<br>而 master 则将结果保存在 mongodb 里面, 看图</p>
+<a id="more"></a>
+<p><img src="/resource/0b24e2e92df44e9e936c148fe46465f7.png" alt="edbf79382966e44f0cf30fced067c217.png"></p>
+<p>然而, 在我们使用的时候出现个奇怪的问题</p>
+<p><img src="/resource/58b9c29a78f743409de73243f6090d42.png" alt="3cdf9b3845bc75db3b5aa060195e3437.png"></p>
+<p>第一个主机上的 state 执行是成功<br>但是莫名其妙会在第二个个主机上执行 state<br>幸好没执行成功, 不然尽给我瞎整.</p>
+<h1 id="分析排查"><a href="#分析排查" class="headerlink" title="分析排查"></a>分析排查</h1><h2 id="基本测试"><a href="#基本测试" class="headerlink" title="基本测试"></a>基本测试</h2><p>先看看这个主机在 master 上是否能正常连接.<br>执行命令<code>salt &quot;VM_0_7_centos&quot; test.ping</code><br>结果显示无法连接</p>
+<p>再看看 salt-minon 的 key 是否还存在<br>执行命令<code>salt-key -L | grep &quot;VM_0_7_centos&quot;</code><br>结果显示, 这台主机 salt-minion 的 key 并不存在</p>
+<p>这就很尴尬了, 为什么一台不存在的主机会被<code>state.sls</code>执行到.<br>关键还不是必现的问题, 不好排查.</p>
+<h2 id="查看源码"><a href="#查看源码" class="headerlink" title="查看源码"></a>查看源码</h2><p>这个问题奇怪的很, 而且不是必现.<br>网上也找不到什么有用的信息.</p>
+<p>好在 SaltStack 是一个开源的项目.<br>有什么不清楚的, 我们可以直接看源码来排查.</p>
+<p>其实对 SaltStack 不是很了解, 代码太长, 我们直接找到问题的核心代码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># 我们使用的是salt -S '10.0.0.1' state.sls的方式执行的</span></span><br><span class="line"><span class="comment"># 所以问题肯定出在查找minions的时候</span></span><br><span class="line"><span class="comment"># 直接看_check_ipcidr_minions方法就行了</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="comment"># 从上层调用的方法来看, greedy 参数默认是True</span></span><br><span class="line"><span class="comment"># 所以每次执行必定是`贪婪模式`</span></span><br><span class="line"><span class="comment">#</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_check_ipcidr_minions</span><span class="params">(self, expr, greedy)</span>:</span></span><br><span class="line">    <span class="string">'''</span></span><br><span class="line"><span class="string">    Return the minions found by looking via ipcidr</span></span><br><span class="line"><span class="string">    '''</span></span><br><span class="line">    cache_enabled = self.opts.get(<span class="string">'minion_data_cache'</span>, <span class="literal">False</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> greedy:</span><br><span class="line">        <span class="comment"># 如果是贪婪模式, 从/etc/salt/pki/minions/里面获取minions</span></span><br><span class="line">        minions = self._pki_minions()</span><br><span class="line">    <span class="keyword">elif</span> cache_enabled:</span><br><span class="line">        <span class="comment"># 如果非贪婪模式, 且打开了缓存, 则从/var/cache/salt/master/minions/获取minions</span></span><br><span class="line">        minions = self.cache.list(<span class="string">'minions'</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">return</span> &#123;<span class="string">'minions'</span>: [],</span><br><span class="line">                <span class="string">'missing'</span>: []&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment"># 从函数整体来看</span></span><br><span class="line">    <span class="comment"># minions是最终返回的列表, 称为返回列表</span></span><br><span class="line">    <span class="comment"># cminions是用来遍历的列表, 称为遍历列表</span></span><br><span class="line">    <span class="comment"># 因为不能一边遍历一个对象一边修改一个对象</span></span><br><span class="line">    <span class="keyword">if</span> cache_enabled:</span><br><span class="line">        <span class="keyword">if</span> greedy:</span><br><span class="line">            cminions = self.cache.list(<span class="string">'minions'</span>)</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            cminions = minions</span><br><span class="line">        <span class="keyword">if</span> cminions <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">            <span class="keyword">return</span> &#123;<span class="string">'minions'</span>: minions,</span><br><span class="line">                    <span class="string">'missing'</span>: []&#125;</span><br><span class="line"></span><br><span class="line">        tgt = expr</span><br><span class="line">        <span class="keyword">try</span>:</span><br><span class="line">            <span class="comment"># Target is an address?</span></span><br><span class="line">            tgt = ipaddress.ip_address(tgt)</span><br><span class="line">        <span class="keyword">except</span> Exception:</span><br><span class="line">            <span class="keyword">try</span>:</span><br><span class="line">                <span class="comment"># Target is a network?</span></span><br><span class="line">                tgt = ipaddress.ip_network(tgt)</span><br><span class="line">            <span class="keyword">except</span> Exception:</span><br><span class="line">                log.error(<span class="string">'Invalid IP/CIDR target: %s'</span>, tgt)</span><br><span class="line">                <span class="keyword">return</span> &#123;<span class="string">'minions'</span>: [],</span><br><span class="line">                        <span class="string">'missing'</span>: []&#125;</span><br><span class="line">        proto = <span class="string">'ipv&#123;0&#125;'</span>.format(tgt.version)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 使用set对list类型去重</span></span><br><span class="line">        minions = set(minions)</span><br><span class="line"></span><br><span class="line">        <span class="comment"># 遍历的列表是从`/var/cache/salt/master/minions/`获取</span></span><br><span class="line">        <span class="comment"># 返回的列表如果是贪婪模式</span></span><br><span class="line">        <span class="comment">#   从`/etc/salt/pki/minions/`获取</span></span><br><span class="line">        <span class="comment"># 返回的列表如果非贪婪模式</span></span><br><span class="line">        <span class="comment">#   从`/var/cache/salt/master/minions/`获取</span></span><br><span class="line">        <span class="comment"># 所以在贪婪模式下, 如果遍历列表和返回列表不一致</span></span><br><span class="line">        <span class="comment"># 则最终会导致多出很多不是我们想要的minion</span></span><br><span class="line">        <span class="comment">#</span></span><br><span class="line">        <span class="keyword">for</span> id_ <span class="keyword">in</span> cminions:</span><br><span class="line">            mdata = self.cache.fetch(<span class="string">'minions/&#123;0&#125;'</span>.format(id_), <span class="string">'data'</span>)</span><br><span class="line">            <span class="keyword">if</span> mdata <span class="keyword">is</span> <span class="literal">None</span>:</span><br><span class="line">                <span class="keyword">if</span> <span class="keyword">not</span> greedy:</span><br><span class="line">                    minions.remove(id_)</span><br><span class="line">                <span class="keyword">continue</span></span><br><span class="line">            grains = mdata.get(<span class="string">'grains'</span>)</span><br><span class="line">            <span class="keyword">if</span> grains <span class="keyword">is</span> <span class="literal">None</span> <span class="keyword">or</span> proto <span class="keyword">not</span> <span class="keyword">in</span> grains:</span><br><span class="line">                match = <span class="literal">False</span></span><br><span class="line">            <span class="keyword">elif</span> isinstance(tgt, (ipaddress.IPv4Address, ipaddress.IPv6Address)):</span><br><span class="line">                match = six.text_type(tgt) <span class="keyword">in</span> grains[proto]</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                match = salt.utils.network.in_subnet(tgt, grains[proto])</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> match <span class="keyword">and</span> id_ <span class="keyword">in</span> minions:</span><br><span class="line">                minions.remove(id_)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> &#123;<span class="string">'minions'</span>: list(minions),</span><br><span class="line">            <span class="string">'missing'</span>: []&#125;</span><br></pre></td></tr></table></figure>
+<p>最终发现<br><code>/var/cache/salt/master/minions/</code>目录里没有相应 minion 的 cache 信息<br>而<code>/etc/salt/pki/minions/</code>上却有相应的 minion 密钥</p>
+<h1 id="复盘思考"><a href="#复盘思考" class="headerlink" title="复盘思考"></a>复盘思考</h1><h2 id="问题的思考"><a href="#问题的思考" class="headerlink" title="问题的思考"></a>问题的思考</h2><ol>
+<li>因为主机下线后没有清掉相应的 key 文件导致的</li>
+<li>使用了 IP 匹配模式来查找 minion</li>
+<li>IP 匹配模式默认使用贪婪模式</li>
+</ol>
+<p>很明显, 不了解的原理导致的问题, 反省, 反省, 反省.</p>
+<h2 id="设计的思考"><a href="#设计的思考" class="headerlink" title="设计的思考"></a>设计的思考</h2><p>我们原本理解的直接指定 IP 地址效率会更高(主机之间通过 IP 地址通过)<br>而且主机名会变, 但 IP 地址一般来说不会变, 所以我们使用 IP 地址来执行<br>然而从代码上来看并不是这样的</p>
+<p>在 salt-master 寻找 minion 时通过 minion 的 IP 地址的来过滤相应的 minion<br>这个实现的过滤方式还有点奇怪</p>
+<p>一般来说, 我们的实现思路应该是这样的</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">find</span><span class="params">(list, key)</span>:</span></span><br><span class="line">    result = []</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> list:</span><br><span class="line">        <span class="keyword">if</span> key == i:</span><br><span class="line">            result.append(i)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> result</span><br></pre></td></tr></table></figure>
+<p>而 saltstack 上实现的方法则是</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">find</span><span class="params">(list1, list2, key)</span>:</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> list1:</span><br><span class="line">        <span class="keyword">if</span> key == i:</span><br><span class="line">            list2.remove(key)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> list2</span><br></pre></td></tr></table></figure>
+<p>这个设计可能是为了满足贪婪模式, 但这个贪婪模式不清楚是为什么.<br>从使用者的角度来看, 感觉这是个欠妥的设计.</p>
+<p>因为使用时已经明确的指定了对某一个 IP 执行某个动作<br>但贪婪模式却尽可能的给我匹配更多的 minion</p>
+<p>在认知和实现上有较大的差距, 虽然这个可能是使用者不当造成的.<br>但在设计时应该尽量避免这种有明显不同的地方.</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/故障/" rel="tag"># 故障</a>
+          
+            <a href="/tags/saltstack/" rel="tag"># saltstack</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2021/03/10/a4f387bec6bc469db9a65aff81e63b6c/" rel="next" title="使用nginx代理跨机房的saltstack使用">
+                <i class="fa fa-chevron-left"></i> 使用nginx代理跨机房的saltstack使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2021/03/10/c5cdc0da435e494f8037967c4df7af78/" rel="prev" title="2019年的工作整理总结">
+                2019年的工作整理总结 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">40</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景问题"><span class="nav-number">1.</span> <span class="nav-text">背景问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析排查"><span class="nav-number">2.</span> <span class="nav-text">分析排查</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#基本测试"><span class="nav-number">2.1.</span> <span class="nav-text">基本测试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#查看源码"><span class="nav-number">2.2.</span> <span class="nav-text">查看源码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复盘思考"><span class="nav-number">3.</span> <span class="nav-text">复盘思考</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#问题的思考"><span class="nav-number">3.1.</span> <span class="nav-text">问题的思考</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#设计的思考"><span class="nav-number">3.2.</span> <span class="nav-text">设计的思考</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
