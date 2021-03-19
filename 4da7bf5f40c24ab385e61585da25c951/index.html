@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="mysql,性能,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前戏其实一开始, 写这东西我其实是拒绝的. 因为感觉没有多少技术含量, 没法体现出我牛逼的地方. 后来想了想, 很多思想和方法还是挺不错, 可以深挖和借鉴. 所以就记录下来, 方便以后回顾. 以上. 问题背景 本地数据库使用 5.6 的 MyISAM 引擎. 业务没有使用事务, 存储过程, join, 之类的常规关系数据查询 直接粗暴简单的将用户数据序列化 json 后存在多个 BLOBTEXT">
+<meta name="keywords" content="mysql,性能">
+<meta property="og:type" content="article">
+<meta property="og:title" content="本地数据库迁移至云数据库的复盘总结">
+<meta property="og:url" content="https://zhiwei.show/4da7bf5f40c24ab385e61585da25c951/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="前戏其实一开始, 写这东西我其实是拒绝的. 因为感觉没有多少技术含量, 没法体现出我牛逼的地方. 后来想了想, 很多思想和方法还是挺不错, 可以深挖和借鉴. 所以就记录下来, 方便以后回顾. 以上. 问题背景 本地数据库使用 5.6 的 MyISAM 引擎. 业务没有使用事务, 存储过程, join, 之类的常规关系数据查询 直接粗暴简单的将用户数据序列化 json 后存在多个 BLOBTEXT">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/046b36a384464532adb1c94d2381ff81.png">
+<meta property="og:image" content="https://zhiwei.show/resource/eeaa8901031547cc99e47c7a359278de.png">
+<meta property="og:image" content="https://zhiwei.show/resource/074964b97f9e4437b884fbd2f5f5f2d2.png">
+<meta property="og:image" content="https://zhiwei.show/resource/f8900adb2fe74dc9a62e2b1cc136f3cd.png">
+<meta property="og:image" content="https://zhiwei.show/resource/89d4e0bc8cc34089a8eb22a7b97011dc.png">
+<meta property="og:image" content="https://zhiwei.show/resource/ec486102f8a14ed4a65184965433cfc4.png">
+<meta property="og:image" content="https://zhiwei.show/resource/c60db2bc344448598421af63d7617f12.png">
+<meta property="og:image" content="https://zhiwei.show/4da7bf5f40c24ab385e61585da25c951/2020-07-07-22-15-24.png">
+<meta property="og:updated_time" content="2020-06-25T21:15:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="本地数据库迁移至云数据库的复盘总结">
+<meta name="twitter:description" content="前戏其实一开始, 写这东西我其实是拒绝的. 因为感觉没有多少技术含量, 没法体现出我牛逼的地方. 后来想了想, 很多思想和方法还是挺不错, 可以深挖和借鉴. 所以就记录下来, 方便以后回顾. 以上. 问题背景 本地数据库使用 5.6 的 MyISAM 引擎. 业务没有使用事务, 存储过程, join, 之类的常规关系数据查询 直接粗暴简单的将用户数据序列化 json 后存在多个 BLOBTEXT">
+<meta name="twitter:image" content="https://zhiwei.show/resource/046b36a384464532adb1c94d2381ff81.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/4da7bf5f40c24ab385e61585da25c951/">
+
+
+
+
+
+  <title>本地数据库迁移至云数据库的复盘总结 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/4da7bf5f40c24ab385e61585da25c951/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">本地数据库迁移至云数据库的复盘总结</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-06-26T05:15:00+08:00">
+                2020-06-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前戏"><a href="#前戏" class="headerlink" title="前戏"></a>前戏</h1><p>其实一开始, 写这东西我其实是拒绝的.</p>
+<p>因为感觉没有多少技术含量, 没法体现出我牛逼的地方.</p>
+<p>后来想了想, 很多思想和方法还是挺不错, 可以深挖和借鉴.</p>
+<p>所以就记录下来, 方便以后回顾.</p>
+<p>以上.</p>
+<h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><ol>
+<li>本地数据库使用 5.6 的 MyISAM 引擎.</li>
+<li>业务没有使用事务, 存储过程, join, 之类的常规关系数据查询</li>
+<li>直接粗暴简单的将用户数据序列化 json 后存在多个 BLOBTEXT 字段里.</li>
+<li>每个小时的整点进行锁表备份, 导致 CPU 的间隔性的突发.</li>
+</ol>
+<p>我们需要做的是在<code>效率</code>, <code>安全</code>, <code>成本</code>之间做平衡</p>
+<h2 id="迁移"><a href="#迁移" class="headerlink" title="迁移"></a>迁移</h2><p>在游戏服导量过后的一段时间.<br>需要定期的对游戏服进行迁移.<br>以提高资源使用率从而降低成本.</p>
+<p>数据库在本地时, 迁移需要对数据库进行导入导出操作<br>既不安全, 效率也低.</p>
+<h2 id="备份"><a href="#备份" class="headerlink" title="备份"></a>备份</h2><p>本地的数据库使用是的每小时备份.<br>在备份时会占用本地主机的资源, 影响用户体验.</p>
+<h2 id="性能"><a href="#性能" class="headerlink" title="性能"></a>性能</h2><p>本地数据库都是机械磁盘<br>同时大批量的停止和启动服务时会有大量的数据库操作<br>这些操作大都是磁盘的瓶颈, 拉长了维护的时间</p>
+<h2 id="回档"><a href="#回档" class="headerlink" title="回档"></a>回档</h2><p>当研发需要查询某个时间的数据时只能按每小时回档</p>
+<h2 id="崩溃"><a href="#崩溃" class="headerlink" title="崩溃"></a>崩溃</h2><p>没有对数据库做高可用, 当数据库崩溃时影响业务的数据安全</p>
+<a id="more"></a>
+<h1 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h1><p>在之前项目中, 使用高性能的机器, 搭建 mysql 主从来解决数据存储的问题</p>
+<p>现在云设施更完善了, 我们可以通过云数据库来达到目的</p>
+<p>云数据库帮我们解决了高可用, 监控, 备份, 安全</p>
+<p>这其中任何一项拿来出来都够我们喝一壶的</p>
+<h2 id="验证兼容问题"><a href="#验证兼容问题" class="headerlink" title="验证兼容问题"></a>验证兼容问题</h2><p>我们之前使用的是 mysql5.6 的 MyISAM 引擎</p>
+<p>而云数据库上只支持 Innodb</p>
+<p>虽说两者主要是事务的差别, 但不清楚项目使用上是否有什么骚操作</p>
+<p>所以我们先将一些没有活跃用户的小平台迁移至云数据库</p>
+<p>运行了一周, 看看是否有数据库兼容的问题</p>
+<p>这个过程很顺利, 并没有遇到兼容性的问题</p>
+<p>迁移过程没有错误, 服务端后台的日志没有错误, 没有用户反馈数据异常.</p>
+<h2 id="验证性能问题"><a href="#验证性能问题" class="headerlink" title="验证性能问题"></a>验证性能问题</h2><p>一个非常基本的问题.</p>
+<p>如果所有游戏服迁移需要多少个云数据库承载.</p>
+<p>涉及到业务的写入机制, 活跃用户, 业务性能, 数据安全多方面的因素.</p>
+<p>所以我们借助数据库的监控系统来分析业务的性能问题.</p>
+<p>经过上线一周来看, 主要有两个问题</p>
+<ol>
+<li>CPU 间隔性突发</li>
+<li>BINLOG 日志过多</li>
+</ol>
+<h3 id="30-分钟的-CPU-间隔性突发排查"><a href="#30-分钟的-CPU-间隔性突发排查" class="headerlink" title="30 分钟的 CPU 间隔性突发排查"></a>30 分钟的 CPU 间隔性突发排查</h3><p>CPU 的间隔突发, 主要影响承载游戏服的数量</p>
+<p>所以我们需要做的是找到 CPU 突发的原因, 然后削峰</p>
+<p><img src="/resource/046b36a384464532adb1c94d2381ff81.png" alt="917d9b017ca6d96a834732842fed2c70.png"></p>
+<p><img src="/resource/eeaa8901031547cc99e47c7a359278de.png" alt="595778a9c55e48204ac73e691e509b2f.png"></p>
+<p>(左边的低突发事因为迁移游戏服的数据库较少)</p>
+<p>从监控数据来看, 突发都是每半个小时一次</p>
+<p>有个奇怪的地方, 在 03:00-04:00 的时候居然也存在 30 分钟的 CPU 突发</p>
+<p>这种明显是不正常的, 毕竟在线的用户少了, 居然还占用这么多资源.</p>
+<p>应该是类似的于活动之类的, 但我们的活动都是在 30/60 分钟之类的时间点</p>
+<p>我们先找到突发点时间范围的云数据库 sql 的审计(真香), 大量的 sql 语句都是类似于</p>
+<p><code>UPDATE items set field1 = &#39;...&#39; where id = &#39;...&#39;</code></p>
+<p>虽然知道了是哪个表导致的, 但是没法知道是哪个业务系统引起的大量<code>UPDATE</code>语句.</p>
+<p>在数据库层面没什么办法了, 只能从业务代码入手.</p>
+<h4 id="Sql-注释法"><a href="#Sql-注释法" class="headerlink" title="Sql 注释法"></a>Sql 注释法</h4><p>有个思路, 通过 Sql 注释的方式将 Sql 的来源写入数据库.</p>
+<p>类似 <code>UPDATE /* SYSTEM_1 */ TABLES set field1 = &#39;...&#39; where id = &#39;...&#39;</code></p>
+<p>和研发沟通后无法实现, 因为 sql 的执行时在数据层, 业务系统在逻辑层</p>
+<p>在数据层执行 sql 存储时无法获取逻辑层的信息, 改动的范围太大, 成本过高</p>
+<h4 id="打印堆栈法"><a href="#打印堆栈法" class="headerlink" title="打印堆栈法"></a>打印堆栈法</h4><p>简单来说, 在数据层入口函数处打印出调用的堆栈信息.</p>
+<p>然后根据统计堆栈的信息进行排查.</p>
+<p>然而还是有点问题, 每个业务系统调用数据存储的方式都不同</p>
+<p>导致打印出的堆栈有不能反映出我们想要的数据.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># 已做混淆</span><br><span class="line"></span><br><span class="line">18543   modules/activity/activityMgr.lua:61</span><br><span class="line"> 6038   player/Player.lua:749:</span><br><span class="line"> 1733   service/DataPack.lua:314:</span><br><span class="line"> 1037   service/DataPack.lua:795:</span><br><span class="line">  851   modules/global/globalwarMgr.lua:1642:</span><br><span class="line">  847   service/PlatMgr.lua:28:</span><br><span class="line">  253   player/PlayerMgr.lua:197:</span><br></pre></td></tr></table></figure>
+<p>从上面的统计来看, 活动模块调用的次数最高.</p>
+<p>然后我们再从<code>activityMgr.lua:61</code>来统计, 看看谁调用的次数最多.</p>
+<p>经过 2,3 次的统计, 终于找到了源头</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># 已做混淆</span><br><span class="line"></span><br><span class="line">18543   modules/difu/difuMgr.lua:61</span><br><span class="line"> 6038   player/PlayerMgr.lua:749</span><br><span class="line"> 1733   service/DataPack.lua:314</span><br><span class="line"> 1037   service/DataPack.lua:795</span><br><span class="line">  851   modules/global/globalMgr.lua:1642</span><br><span class="line">  847   service/PlatMgr.lua:28</span><br><span class="line">  253   player/PlayerMgr.lua:197</span><br></pre></td></tr></table></figure>
+<p>最终和研发沟通后发现逻辑确实有点问题</p>
+<p>活动每半个小时会遍历所有的玩家, 而业务需求上只需要查询一次即可</p>
+<p>修复之后观察监控数据.</p>
+<p><img src="/resource/074964b97f9e4437b884fbd2f5f5f2d2.png" alt="c0e5a4a027cfe9e9e1b701e8e0ce843c.png"></p>
+<p><img src="/resource/f8900adb2fe74dc9a62e2b1cc136f3cd.png" alt="1fefa382f76e0c0d2533cf01b8f8f319.png"></p>
+<h3 id="10-分钟的-CPU-间隔突发排查"><a href="#10-分钟的-CPU-间隔突发排查" class="headerlink" title="10 分钟的 CPU 间隔突发排查"></a>10 分钟的 CPU 间隔突发排查</h3><p>虽然把 30 分钟 CPU 突发给解决了, 但是在监控上发现, 还是有一些 10 分间隔 CPU 的突发点</p>
+<p>这个问题相对好排查一些, 通过云数据库审计系统统计出的 SQL 语句</p>
+<p>大部分都是<code>UPDATE mails SET content = &#39;...&#39; where id = &#39;...&#39;</code></p>
+<p>从 Sql 来看明显能够定位到具体的业务系统</p>
+<p>通过 Sql 发现大量的邮件内容都是充值 0.01 元导致的</p>
+<p>那么问题来了, 为什么充值 0.01 元会导致 CPU 突发?</p>
+<p>说来也很是蛋疼的很啊, 系统在设计时, 有这么个逻辑</p>
+<p>如果一个玩家登陆, 会将所有的邮件装载到内存里, 避免玩家查邮件因为读数据库卡顿导致操作延迟</p>
+<p>如果这个玩家下线, 那么所有在内存里的数据都要强制进行一次数据库写入操作.</p>
+<p>恰好, 我们有个用来测试的机器人, 每 10 分钟会在每个游戏服上找个长期(1 个月)没有登陆的玩家</p>
+<p>进行登陆测试和充值测试, 这就导致每个游戏服, 每十分钟会有个玩家登陆, 下线, 写数据库.</p>
+<p>并且这个操作是立刻的, 所以当有 100 个游戏服的时候就会有 100 个写入操作.</p>
+<p>我们默认只保留 15 天的邮件, 按机器人 10 分钟 1 封, <code>60 * 24 * 15 / 10 = 2160</code></p>
+<p>一个游戏服一次登陆需要读取 2160 封邮件, 然后再写入 2160 封邮件</p>
+<p>如果有 100 个游戏服, 那就是<code>2160 * 100 = 216000</code>封邮件, CPU 就是这样被玩坏的.</p>
+<p>一开始, 我们想把机器人的测试时间加个随机数, 错开高峰.</p>
+<p>但是想想觉得这并不是一个合理的操作, 测试的邮件都是无用的数据.</p>
+<p>频繁的读取和写入, 大量的浪费资源, 影响性能.</p>
+<p>最后我们决定每次进行 0.01 元充值时, 将机器人登陆邮件全部清空.</p>
+<p>这样就避免的测试时大量的无效操作, 观察监控后, CPU 有所下滑了.</p>
+<p><img src="/resource/89d4e0bc8cc34089a8eb22a7b97011dc.png" alt="3e9f99ac24a8b7409fb3980fed105f3c.png"></p>
+<h3 id="BINLOG-日志过多排查"><a href="#BINLOG-日志过多排查" class="headerlink" title="BINLOG 日志过多排查"></a>BINLOG 日志过多排查</h3><p>CPU 突发的问题我们差不多都解决了</p>
+<p>还有一些突发点是业务需求和修复成本导致的</p>
+<p>所以先观察观察, 接着来看看 BINLOG 日志的问题</p>
+<h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>游戏的架构通常都是在服务内存存储着玩家的数据作为缓存.</p>
+<p>所以的数据更新都在缓存进行, 然后定时同步到数据库里.</p>
+<p>如果在更新缓存后发生了宕机(系统层和应用层), 就会出现传说中的回档.</p>
+<p>缺点就是每次写入数据库的数据比一般的大, 但是没有事务的需求.</p>
+<p>当时我们大概估算了一下, BINLOG 的日志一天大概在 260G 左右.</p>
+<p>保留七天, 也就是 1800G, 1800G - 500G(免费额度) = 1300G,</p>
+<p>腾讯云的 BINLOG 备份日志按 0.008/G/小时算</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1300 * 0.008 * 24 = 249.6</span><br><span class="line">249.6 * 30 =  7488</span><br></pre></td></tr></table></figure>
+<p>一个月光是日志的费用就需要 7488.</p>
+<p>还没完, 根据活跃用户, 我估算了下, 大概需要 30 台云数据库.</p>
+<p>这样<code>7488 * 30 = 224640</code>, 一个月多了 2W 块的成本, 还只是 BINLOG 日志的.</p>
+<p>所以没办法, 必须得进行优化才能上.</p>
+<h4 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h4><p>我们知道, BINLOG 文件的大小取决于两点<code>Sql次数</code>和<code>Sql大小</code></p>
+<p>所以我们需要根据这两个信息的数据进行判断.</p>
+<p>这里先夸一下, 腾讯云的 Sql 审计系统, 做的还不错(也有可以提高的地方)</p>
+<p>可以直接将取 1 小时范围内的 Sql 语句来统计次数和大小.</p>
+<p><img src="/resource/ec486102f8a14ed4a65184965433cfc4.png" alt="d0d3dec288d3063390e1e58888b75114.png"></p>
+<p>这里有个问题, 腾讯云数据库审计系统上的 Sql 是有部分截取的.</p>
+<p>所以没法知道这个 Sql 语句的大小到底是多少, 只能从时间维度上进行对比</p>
+<p>而 Sql 语句的准确大小我们要根据 BINLOG 里面的 Sql 来计算</p>
+<p><img src="/resource/c60db2bc344448598421af63d7617f12.png" alt="d4faff7f34b93348e2d01e0372186369.png"></p>
+<p>这样我们就能从时间和大小两个维度来比对 BINLOG 大小.</p>
+<p>从而发现到底是哪个表和系统有过多的增删改.</p>
+<p>可以看到, <code>players</code>表的 Update 的大小最多, <code>ranks</code>表的 Insert 最多.</p>
+<p>所以我们需要针对这两个表进行优化.</p>
+<h3 id="解决解决"><a href="#解决解决" class="headerlink" title="解决解决"></a>解决解决</h3><p>再和研发沟通后得知, players 表示每 3 分钟更新一次.</p>
+<p>而 ranks 表示 30 分钟整表清空(不是 delete), 然后 insert.</p>
+<p>经过我们的多次尝试, 最后将 players 表改成 30 分钟写一次库</p>
+<p>而 ranks 表则 2 小时写一次库, players 表的重要性比 ranks 要大.</p>
+<p>所以我们会考虑尽量降低 players 的写入时长, 而提高 ranks 表的写入时长.</p>
+<p>完成后观察了下备份的大小, 还行, 在可接受的范围.</p>
+<p><img src="2020-07-07-22-15-24.png" alt></p>
+<h1 id="复盘总结"><a href="#复盘总结" class="headerlink" title="复盘总结"></a>复盘总结</h1><ol>
+<li>云数据库监控和审计能够帮助定位了很多问题</li>
+<li>对业务开发需要制定限制和标准</li>
+<li>基于数据统计后的执行效果就是快, 准, 狠.</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mysql/" rel="tag"># mysql</a>
+          
+            <a href="/tags/性能/" rel="tag"># 性能</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/397203e63bb441198edc9333273d2194/" rel="next" title="有关SaltStack的State错误的执行在其他主机上">
+                <i class="fa fa-chevron-left"></i> 有关SaltStack的State错误的执行在其他主机上
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/4ec7a130f7bb4ac48dfae71508b462e7/" rel="prev" title="游戏业务数据库集中式储存的问题">
+                游戏业务数据库集中式储存的问题 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前戏"><span class="nav-number">1.</span> <span class="nav-text">前戏</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题背景"><span class="nav-number">2.</span> <span class="nav-text">问题背景</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#迁移"><span class="nav-number">2.1.</span> <span class="nav-text">迁移</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#备份"><span class="nav-number">2.2.</span> <span class="nav-text">备份</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#性能"><span class="nav-number">2.3.</span> <span class="nav-text">性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#回档"><span class="nav-number">2.4.</span> <span class="nav-text">回档</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#崩溃"><span class="nav-number">2.5.</span> <span class="nav-text">崩溃</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#解决思路"><span class="nav-number">3.</span> <span class="nav-text">解决思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#验证兼容问题"><span class="nav-number">3.1.</span> <span class="nav-text">验证兼容问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#验证性能问题"><span class="nav-number">3.2.</span> <span class="nav-text">验证性能问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#30-分钟的-CPU-间隔性突发排查"><span class="nav-number">3.2.1.</span> <span class="nav-text">30 分钟的 CPU 间隔性突发排查</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Sql-注释法"><span class="nav-number">3.2.1.1.</span> <span class="nav-text">Sql 注释法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#打印堆栈法"><span class="nav-number">3.2.1.2.</span> <span class="nav-text">打印堆栈法</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#10-分钟的-CPU-间隔突发排查"><span class="nav-number">3.2.2.</span> <span class="nav-text">10 分钟的 CPU 间隔突发排查</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#BINLOG-日志过多排查"><span class="nav-number">3.2.3.</span> <span class="nav-text">BINLOG 日志过多排查</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#问题"><span class="nav-number">3.2.3.1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#思路"><span class="nav-number">3.2.3.2.</span> <span class="nav-text">思路</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#解决解决"><span class="nav-number">3.2.4.</span> <span class="nav-text">解决解决</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复盘总结"><span class="nav-number">4.</span> <span class="nav-text">复盘总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

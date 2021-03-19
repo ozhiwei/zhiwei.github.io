@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="saltstack,nginx,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="问题背景我们是游戏研发公司, 需要和不同的发行商合作运营而且很多发行商要求使用自己的服务器(毕竟自己控制更可靠)所以就出现了这么一种情况 业务不大, 但是不同云厂和区域的服务器不少.并且我们使用 SaltStack 来管理主机的信息.从主机的注册到作业的执行, 基本上是这样的 1salt-master&amp;lt;-----&amp;gt;nginx-stream&amp;lt;-----&amp;gt;salt-minion">
+<meta name="keywords" content="saltstack,nginx">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用nginx代理跨机房的saltstack使用">
+<meta property="og:url" content="https://zhiwei.show/a4f387bec6bc469db9a65aff81e63b6c/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="问题背景我们是游戏研发公司, 需要和不同的发行商合作运营而且很多发行商要求使用自己的服务器(毕竟自己控制更可靠)所以就出现了这么一种情况 业务不大, 但是不同云厂和区域的服务器不少.并且我们使用 SaltStack 来管理主机的信息.从主机的注册到作业的执行, 基本上是这样的 1salt-master&amp;lt;-----&amp;gt;nginx-stream&amp;lt;-----&amp;gt;salt-minion">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/a33aa4daf83a47f496f8e2edab102d2b.png">
+<meta property="og:updated_time" content="2020-05-10T01:37:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用nginx代理跨机房的saltstack使用">
+<meta name="twitter:description" content="问题背景我们是游戏研发公司, 需要和不同的发行商合作运营而且很多发行商要求使用自己的服务器(毕竟自己控制更可靠)所以就出现了这么一种情况 业务不大, 但是不同云厂和区域的服务器不少.并且我们使用 SaltStack 来管理主机的信息.从主机的注册到作业的执行, 基本上是这样的 1salt-master&amp;lt;-----&amp;gt;nginx-stream&amp;lt;-----&amp;gt;salt-minion">
+<meta name="twitter:image" content="https://zhiwei.show/resource/a33aa4daf83a47f496f8e2edab102d2b.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/a4f387bec6bc469db9a65aff81e63b6c/">
+
+
+
+
+
+  <title>使用nginx代理跨机房的saltstack使用 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/a4f387bec6bc469db9a65aff81e63b6c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">使用nginx代理跨机房的saltstack使用</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-10T09:37:00+08:00">
+                2020-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>我们是游戏研发公司, 需要和不同的发行商合作运营<br>而且很多发行商要求使用自己的服务器(毕竟自己控制更可靠)<br>所以就出现了这么一种情况</p>
+<p>业务不大, 但是不同云厂和区域的服务器不少.<br>并且我们使用 SaltStack 来管理主机的信息.<br>从主机的注册到作业的执行, 基本上是这样的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">salt-master&lt;-----&gt;nginx-stream&lt;-----&gt;salt-minion</span><br></pre></td></tr></table></figure>
+<p>这里为啥使用 nginx-stream, 而不是 salt-syndic<br>主要是因为简单, 稳定, 而且 salt-syndic 无法针对单个 minion 下发 job</p>
+<p>把 nginx 部署在<code>docker swarm</code>上<br>有一个区域就添加一个<code>docker worker</code>, 然后自动的部署上去了</p>
+<p>大概的思路是这样的, 然而在部署好了后使用<code>salt &#39;h72g9g19vr391.qcloud.hk&#39; test.ping</code><br>有时正常, 有时却返回超时</p>
+<a id="more"></a>
+<h1 id="排查思路"><a href="#排查思路" class="headerlink" title="排查思路"></a>排查思路</h1><h2 id="saltstack-排查"><a href="#saltstack-排查" class="headerlink" title="saltstack 排查"></a>saltstack 排查</h2><p>先打开 salt-master 日志的 debug 模式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">2020-05-29 16:29:01,272 Sending event: tag = 20200529162901272112; data = &#123;&apos;minions&apos;: [&apos;h72g9g19vr391.qcloud.hk&apos;], &apos;_stamp&apos;: &apos;2020-05-29T08:29:01.272678&apos;&#125;</span><br><span class="line">2020-05-29 16:29:01,273 Sending event: tag = salt/job/20200529162901272112/new; data = &#123;&apos;jid&apos;: &apos;20200529162901272112&apos;, &apos;tgt_type&apos;: &apos;glob&apos;, &apos;tgt&apos;: &apos;h72g9g19vr391.qcloud.hk&apos;, &apos;us</span><br><span class="line">2020-05-29 16:29:01,285 LazyLoaded config.option</span><br><span class="line">2020-05-29 16:29:01,293 [salt.master      :2346][INFO    ][137] User root Published command test.ping with jid 20200529162901272112</span><br><span class="line">2020-05-29 16:29:01,293 Published command details &#123;&apos;fun&apos;: &apos;test.ping&apos;, &apos;arg&apos;: [], &apos;tgt&apos;: &apos;h72g9g19vr391.qcloud.hk&apos;, &apos;jid&apos;: &apos;20200529162901272112&apos;, &apos;ret&apos;: &apos;&apos;, &apos;tgt_type&apos;: &apos;glob&apos;</span><br><span class="line">2020-05-29 16:29:01,294 Signing data packet</span><br><span class="line">2020-05-29 16:29:01,294 salt.crypt.get_rsa_key: Loading private key</span><br><span class="line">2020-05-29 16:29:01,294 salt.crypt.sign_message: Signing message.</span><br><span class="line">2020-05-29 16:29:01,296 Sending payload to publish daemon. jid=20200529162901272112 size=452</span><br><span class="line">2020-05-29 16:29:01,297 Connecting to pub server: ipc:///var/run/salt/master/publish_pull.ipc</span><br><span class="line">2020-05-29 16:29:01,297 Sent payload to publish daemon.</span><br><span class="line">2020-05-29 16:29:01,297 Publish daemon received payload. size=452</span><br><span class="line">2020-05-29 16:29:01,298 Closing AsyncZeroMQReqChannel instance</span><br><span class="line">2020-05-29 16:29:01,299 Publish daemon getting data from puller ipc:///var/run/salt/master/publish_pull.ipc</span><br><span class="line">2020-05-29 16:29:01,332 LazyLoaded mongo.get_load</span><br><span class="line">2020-05-29 16:29:01,336 LazyLoaded config.option</span><br><span class="line">2020-05-29 16:29:01,567 get_iter_returns for jid 20200529162901272112 sent to &#123;&apos;h72g9g19vr391.qcloud.hk&apos;&#125; will timeout at 16:29:06.567535</span><br><span class="line">2020-05-29 16:29:06,675 Checking whether jid 20200529162901272112 is still running</span><br></pre></td></tr></table></figure>
+<p>从上面 saltstack 的日志来看, master 已经将 job 信息 publish 到了 zeromq 里面了<br>然而, 在 salt-minion 上并没有看到相关的日志信息.</p>
+<p>也就是说 salt-minion 完全没有收到 salt-master 的 publish 的信息.<br>salt-master 已经发了, 但是 salt-minion 没有收到<br>那就说明数据丢在了 nginx 的转发上面</p>
+<h2 id="nginx-排查"><a href="#nginx-排查" class="headerlink" title="nginx 排查"></a>nginx 排查</h2><p><img src="/resource/a33aa4daf83a47f496f8e2edab102d2b.png" alt="213f9a29b1b06f3565870b7711b86e40.png"></p>
+<p>从上面的抓包数据可以看到, 在第 8 秒时, “客户端”主动发起来断开的数据包(FIN)<br>到底是 salt-minion 发出的 FIN, 还是 nginx 发出的 FIN</p>
+<p>猜测应该是 nginx 发出的 FIN, 理由如下</p>
+<ol>
+<li>直连的 salt-minion 没有问题.</li>
+<li>salt-minion 的 debug 日志里没有任何信息</li>
+<li>对比了正常请求的 salt-master 的 debug 日志, 没有任何关于客户端的错误</li>
+</ol>
+<p>先看看 nginx 的配置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">stream &#123;</span><br><span class="line">    upstream salt-master &#123;</span><br><span class="line">        hash $remote_addr consistent;</span><br><span class="line">        server 1.1.1.1:4505;</span><br><span class="line">    &#125;</span><br><span class="line">    server &#123;</span><br><span class="line">        listen 4505;</span><br><span class="line">        proxy_connect_timeout 5s;</span><br><span class="line">        proxy_timeout 5s;</span><br><span class="line">        proxy_pass salt-master;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从配置上来看, 问题出在了<code>proxy_timeout 5s;</code>, 查下文档.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Syntax:	proxy_timeout timeout;</span><br><span class="line">Default:</span><br><span class="line">proxy_timeout 10m;</span><br><span class="line">Context:	stream, server</span><br><span class="line">Sets the timeout between two successive read or write operations on client or proxied server connections.</span><br><span class="line">If no data is transmitted within this time, the connection is closed.</span><br></pre></td></tr></table></figure>
+<p>在客户端和代理服务器上设置读取或写入的超时时间, 如果没有数据传输, 则连接断开.<br>把这个配置文件去掉后, 就都正常了.</p>
+<h1 id="复盘总结"><a href="#复盘总结" class="headerlink" title="复盘总结"></a>复盘总结</h1><ol>
+<li>排查的思路很重要, 一直以为是 saltstack 出了问题, 不停的在查两边的日志.</li>
+<li>配置文件是完全复制之前的, 所以出了问题才发现.</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/saltstack/" rel="tag"># saltstack</a>
+          
+            <a href="/tags/nginx/" rel="tag"># nginx</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/faa6264186c549e2872823cad0749b68/" rel="next" title="nginx的mirror模块请求返回400状态">
+                <i class="fa fa-chevron-left"></i> nginx的mirror模块请求返回400状态
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/b078bce7c017421483ca473014d6f081/" rel="prev" title="Docker-Swarm尝试引发的并发问题">
+                Docker-Swarm尝试引发的并发问题 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题背景"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#排查思路"><span class="nav-number">2.</span> <span class="nav-text">排查思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#saltstack-排查"><span class="nav-number">2.1.</span> <span class="nav-text">saltstack 排查</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#nginx-排查"><span class="nav-number">2.2.</span> <span class="nav-text">nginx 排查</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复盘总结"><span class="nav-number">3.</span> <span class="nav-text">复盘总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

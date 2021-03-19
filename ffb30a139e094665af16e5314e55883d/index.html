@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="故障,复盘,tcpdump,http,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="问题背景我们是一家 H5 的研发公司.运营突然报业务故障, 玩家登录不了(监控没做好, 真的是没人啊..)点击进入游戏时转圈圈, 提示连接超时(找不到图了, 发挥一下想象吧) 排查思路经过我们的沟通, 得出信息  只有 IOS 的用户有问题 只有某个特殊渠道有问题 同样的手机访问其他游戏没问题 同样的账号换手机登录没问题 没有更新版本和变动  这样来看, 肯定是渠道方更新了什么导致的故障 客户端只">
+<meta name="keywords" content="故障,复盘,tcpdump,http">
+<meta property="og:type" content="article">
+<meta property="og:title" content="错误的HTTP头解析引发的故障">
+<meta property="og:url" content="https://zhiwei.show/ffb30a139e094665af16e5314e55883d/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="问题背景我们是一家 H5 的研发公司.运营突然报业务故障, 玩家登录不了(监控没做好, 真的是没人啊..)点击进入游戏时转圈圈, 提示连接超时(找不到图了, 发挥一下想象吧) 排查思路经过我们的沟通, 得出信息  只有 IOS 的用户有问题 只有某个特殊渠道有问题 同样的手机访问其他游戏没问题 同样的账号换手机登录没问题 没有更新版本和变动  这样来看, 肯定是渠道方更新了什么导致的故障 客户端只">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/2e056ea1100841f998b5dfc55c13d6e1.png">
+<meta property="og:image" content="https://zhiwei.show/resource/e3d456f0e9cc4ea884b0ed0feb657ea8.png">
+<meta property="og:image" content="https://zhiwei.show/resource/c7782c7799f74fe391f91c823b05acdc.png">
+<meta property="og:image" content="https://zhiwei.show/resource/887ad45b8ee943a4916e914f9a6397ff.png">
+<meta property="og:image" content="https://zhiwei.show/resource/0238fdb31c9f4b6c89b1ccf625fd27dd.png">
+<meta property="og:image" content="https://zhiwei.show/resource/edd1a15bb4664318ae5a5e5f7f1d8932.png">
+<meta property="og:updated_time" content="2020-05-20T23:31:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="错误的HTTP头解析引发的故障">
+<meta name="twitter:description" content="问题背景我们是一家 H5 的研发公司.运营突然报业务故障, 玩家登录不了(监控没做好, 真的是没人啊..)点击进入游戏时转圈圈, 提示连接超时(找不到图了, 发挥一下想象吧) 排查思路经过我们的沟通, 得出信息  只有 IOS 的用户有问题 只有某个特殊渠道有问题 同样的手机访问其他游戏没问题 同样的账号换手机登录没问题 没有更新版本和变动  这样来看, 肯定是渠道方更新了什么导致的故障 客户端只">
+<meta name="twitter:image" content="https://zhiwei.show/resource/2e056ea1100841f998b5dfc55c13d6e1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/ffb30a139e094665af16e5314e55883d/">
+
+
+
+
+
+  <title>错误的HTTP头解析引发的故障 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/ffb30a139e094665af16e5314e55883d/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">错误的HTTP头解析引发的故障</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-21T07:31:00+08:00">
+                2020-05-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>我们是一家 H5 的研发公司.<br>运营突然报业务故障, 玩家登录不了(监控没做好, 真的是没人啊..)<br>点击进入游戏时转圈圈, 提示<code>连接超时</code>(找不到图了, 发挥一下想象吧)</p>
+<h1 id="排查思路"><a href="#排查思路" class="headerlink" title="排查思路"></a>排查思路</h1><p>经过我们的沟通, 得出信息</p>
+<ol>
+<li>只有 IOS 的用户有问题</li>
+<li>只有某个特殊渠道有问题</li>
+<li>同样的手机访问其他游戏没问题</li>
+<li>同样的账号换手机登录没问题</li>
+<li>没有更新版本和变动</li>
+</ol>
+<p>这样来看, 肯定是渠道方更新了什么导致的故障</p>
+<p>客户端只有连接超时的信息.<br>服务端上只有一行<code>http hand failed</code>, 没有任何其他信息</p>
+<a id="more"></a>
+<h2 id="代理端-HTTP-数据包分析"><a href="#代理端-HTTP-数据包分析" class="headerlink" title="代理端 HTTP 数据包分析"></a>代理端 HTTP 数据包分析</h2><p>之前忘了说, 我们的架构是这样的.<br>(游戏行业里算是有点奇葩的, 据说是因为 server 的框架不支持 https)</p>
+<p><img src="/resource/2e056ea1100841f998b5dfc55c13d6e1.png" alt="3d4b161bb892d99babd254c5d0cbe4de.png"></p>
+<p>故障的 TCP 数据包</p>
+<p><img src="/resource/e3d456f0e9cc4ea884b0ed0feb657ea8.png" alt="f0b0785b0855afe64696f32b9c526f18.png"></p>
+<p>正常的 TCP 数据包</p>
+<p><img src="/resource/c7782c7799f74fe391f91c823b05acdc.png" alt="968ef4cf35c71f54653f00b2ae6cc6eb.png"></p>
+<p>可以看到, 有故障的 TCP 数据包, 被客户端 REST 断开了.<br>结合服务端日志来看, 应该是在 HTTP 请求的时候出错了.</p>
+<p>因为都是 HTTPS 的连接, 所以无法查看请求的信息.<br>尝试了很多解密的方式都无果.<br>最后没办法, 只能在服务端进行抓包.</p>
+<h2 id="服务端-HTTP-数据包分析"><a href="#服务端-HTTP-数据包分析" class="headerlink" title="服务端 HTTP 数据包分析"></a>服务端 HTTP 数据包分析</h2><p>我们在服务端上抓包, 对比正常的请求, 和异常的请求</p>
+<p>异常的 http 数据包</p>
+<p><img src="/resource/887ad45b8ee943a4916e914f9a6397ff.png" alt="091954544ca7fa83b0a9f03efe911551.png"></p>
+<p>正常的 http 数据包</p>
+<p><img src="/resource/0238fdb31c9f4b6c89b1ccf625fd27dd.png" alt="e2eaee36d91e6054dd6ef670deac61da.png"></p>
+<p>终于找到问题了, 服务端没有返回 http 的 websocket 的请求<br>问题又来了, 为什么没有返回请求?</p>
+<h2 id="服务端-HTTP-请求信息分析"><a href="#服务端-HTTP-请求信息分析" class="headerlink" title="服务端 HTTP 请求信息分析"></a>服务端 HTTP 请求信息分析</h2><p>从服务端的错误信息来看, 肯定是服务端处理 http 请求的时候出错了.<br>所以我们再来对比下两个请求的 http 信息</p>
+<p>左边是异常的 http 请求信息, 右边是正常的 http 请求信息</p>
+<p><img src="/resource/edd1a15bb4664318ae5a5e5f7f1d8932.png" alt="d5473da85f1af5dbd4ed4fcd8c79cb69.png"></p>
+<p>看到一个很奇怪的头信息<code>Cookie</code>, 这个头信息是空的.<br>为什么头信息是空的值得怀疑?<br>因为所有其他的头信息看起来都是正常的<br>所以只能先排除这个最明显的异常.</p>
+<p>我们找了个服务进行测试, 在代理端通过<code>proxy_set_header Cookie &quot;&quot;;</code><br>最后 reload 后, 这个服务正常了.</p>
+<p>以上.</p>
+<h1 id="复盘总结"><a href="#复盘总结" class="headerlink" title="复盘总结"></a>复盘总结</h1><h2 id="业务监控"><a href="#业务监控" class="headerlink" title="业务监控"></a>业务监控</h2><p>因为游戏行业有上万个独立的服务, 监控覆盖的成本非常高.<br>而且我们做了日志的监控, 但是这个日志不是标准的错误格式, 所以根本没法捕捉到.</p>
+<h2 id="HTTPS"><a href="#HTTPS" class="headerlink" title="HTTPS"></a>HTTPS</h2><p>对 HTTPS 的知识点不是很熟悉, 需要看一看.<br>HTTPS 的解码对排查问题帮助很大, 如果我们没有 HTTP 请求, 那排查的效率指数上升.</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/故障/" rel="tag"># 故障</a>
+          
+            <a href="/tags/复盘/" rel="tag"># 复盘</a>
+          
+            <a href="/tags/tcpdump/" rel="tag"># tcpdump</a>
+          
+            <a href="/tags/http/" rel="tag"># http</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/b078bce7c017421483ca473014d6f081/" rel="next" title="Docker-Swarm尝试引发的并发问题">
+                <i class="fa fa-chevron-left"></i> Docker-Swarm尝试引发的并发问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/397203e63bb441198edc9333273d2194/" rel="prev" title="有关SaltStack的State错误的执行在其他主机上">
+                有关SaltStack的State错误的执行在其他主机上 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题背景"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#排查思路"><span class="nav-number">2.</span> <span class="nav-text">排查思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#代理端-HTTP-数据包分析"><span class="nav-number">2.1.</span> <span class="nav-text">代理端 HTTP 数据包分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#服务端-HTTP-数据包分析"><span class="nav-number">2.2.</span> <span class="nav-text">服务端 HTTP 数据包分析</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#服务端-HTTP-请求信息分析"><span class="nav-number">2.3.</span> <span class="nav-text">服务端 HTTP 请求信息分析</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复盘总结"><span class="nav-number">3.</span> <span class="nav-text">复盘总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#业务监控"><span class="nav-number">3.1.</span> <span class="nav-text">业务监控</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTPS"><span class="nav-number">3.2.</span> <span class="nav-text">HTTPS</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

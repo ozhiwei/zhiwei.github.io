@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="算法,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="什么问题解决规模效率的问题, 基本思路是如果数量越多, 就让他的成本更低 举个例子:我们店里有三种一次性商品: 纸杯, 手套, 口罩 商品的货架位置分别在 1 米(纸杯), 3 米(手套), 5 米(口罩) 而根据我们出货数量的统计发现 口罩每天能卖 100 个, 手套 20 个, 纸杯 10 个 这样我们算一下每天总共需要走多少米 123100个口罩 * 5米(口罩货架的位置) + 20个手套">
+<meta name="keywords" content="算法">
+<meta property="og:type" content="article">
+<meta property="og:title" content="哈夫曼编码">
+<meta property="og:url" content="https://zhiwei.show/78100c4518fd46dabbde08924e39f121/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="什么问题解决规模效率的问题, 基本思路是如果数量越多, 就让他的成本更低 举个例子:我们店里有三种一次性商品: 纸杯, 手套, 口罩 商品的货架位置分别在 1 米(纸杯), 3 米(手套), 5 米(口罩) 而根据我们出货数量的统计发现 口罩每天能卖 100 个, 手套 20 个, 纸杯 10 个 这样我们算一下每天总共需要走多少米 123100个口罩 * 5米(口罩货架的位置) + 20个手套">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/6f060ad57fac497da36f3d2a240acee0.png">
+<meta property="og:updated_time" content="2021-03-19T01:31:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="哈夫曼编码">
+<meta name="twitter:description" content="什么问题解决规模效率的问题, 基本思路是如果数量越多, 就让他的成本更低 举个例子:我们店里有三种一次性商品: 纸杯, 手套, 口罩 商品的货架位置分别在 1 米(纸杯), 3 米(手套), 5 米(口罩) 而根据我们出货数量的统计发现 口罩每天能卖 100 个, 手套 20 个, 纸杯 10 个 这样我们算一下每天总共需要走多少米 123100个口罩 * 5米(口罩货架的位置) + 20个手套">
+<meta name="twitter:image" content="https://zhiwei.show/resource/6f060ad57fac497da36f3d2a240acee0.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/78100c4518fd46dabbde08924e39f121/">
+
+
+
+
+
+  <title>哈夫曼编码 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/78100c4518fd46dabbde08924e39f121/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">哈夫曼编码</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-19T09:31:00+08:00">
+                2021-03-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="什么问题"><a href="#什么问题" class="headerlink" title="什么问题"></a>什么问题</h1><p>解决规模效率的问题, 基本思路是<code>如果数量越多, 就让他的成本更低</code></p>
+<h1 id="举个例子"><a href="#举个例子" class="headerlink" title="举个例子:"></a>举个例子:</h1><p>我们店里有三种一次性商品: 纸杯, 手套, 口罩</p>
+<p>商品的货架位置分别在 1 米(纸杯), 3 米(手套), 5 米(口罩)</p>
+<p>而根据我们出货数量的统计发现</p>
+<p>口罩每天能卖 100 个, 手套 20 个, 纸杯 10 个</p>
+<p>这样我们算一下每天总共需要走多少米</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">100个口罩 * 5米(口罩货架的位置) + 20个手套 * 3米(手套货架的位置) + 10个纸杯 * 1米(纸杯货架的位置)</span><br><span class="line"></span><br><span class="line">100 * 5 + 20 * 3 + 10 *1 = 570米</span><br></pre></td></tr></table></figure>
+<p>总觉得哪里不太对劲啊</p>
+<a id="more"></a>
+<p>为什么口罩购买的那么多, 却放在那么远的<br>而纸杯购买那么的那么少, 反而放的那么近</p>
+<p>假如我们把纸杯和口罩的货架位置转换一下后再来看看</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">100个口罩 * 1米(口罩货架的位置) + 20个手套 * 3米(手套货架的位置) + 10个纸杯 * 5米(纸杯货架的位置)</span><br><span class="line"></span><br><span class="line">100 * 1 + 20 * 3 + 10 *1 = 170米</span><br></pre></td></tr></table></figure>
+<p>看看, 只是的换了一下位置, 就比之前节省了 400 米.</p>
+<h1 id="编码是什么东西"><a href="#编码是什么东西" class="headerlink" title="编码是什么东西"></a>编码是什么东西</h1><p>所谓的编码, 是将我们想要传输的信息转为能够理解的信息格式</p>
+<p>众所周知, 计算机识别二进制, 比如</p>
+<p>000 =&gt; 哈<br>001 =&gt; 夫<br>010 =&gt; 曼<br>011 =&gt; 编<br>100 =&gt; 码</p>
+<p>这样计算机是不是就能帮助我们传递信息了</p>
+<p>传递<code>哈夫曼编码</code>四个字共需要 15 个比特</p>
+<h1 id="等长编码"><a href="#等长编码" class="headerlink" title="等长编码"></a>等长编码</h1><p>每个编码的位数是一样长的就是等长编码</p>
+<p>比如使用最广的<code>ASCII码</code>用 1 个字节编码</p>
+<p>0000 0000 =&gt; a<br>0000 0001 =&gt; b<br>0000 0010 =&gt; c<br>0000 0011 =&gt; d</p>
+<p>这样我传输 4 个字符, 就需要 32 个 bit, 感觉有点浪费啊, 前面的 0 光占坑不干活</p>
+<p>有没有办法能节省下, 我们知道在<code>传输速度</code>不变的情况下, <code>传输总量</code>越小, <code>消耗时间</code>也越少</p>
+<h1 id="变长编码"><a href="#变长编码" class="headerlink" title="变长编码"></a>变长编码</h1><p>比如, 我们用<br>0 =&gt; a<br>1 =&gt; b<br>01 =&gt; c<br>10 =&gt; d</p>
+<p>总共就需要传输 6 个 bit, 等等, 等等, 不太对劲.</p>
+<p>计算机怎么识别<code>01</code>代表<code>c</code>还是<code>a</code>和<code>b</code>呢, 貌似识别不出来啊.</p>
+<p>既然这样, 那将有冲突的二进制去掉就可以了.</p>
+<p>0 =&gt; a<br>11 =&gt; b<br>100 =&gt; c<br>101 =&gt; d</p>
+<p>这样看来, 发送 4 个字符, 总要需要 9 个 bit</p>
+<p>相比于等长编码的 32 个 bit, 我们节省了 23 个 bit,</p>
+<h1 id="字符的频率"><a href="#字符的频率" class="headerlink" title="字符的频率"></a>字符的频率</h1><p>大致的思路都理解了, 现在我们从一个实际的例子触发</p>
+<p>假设我们传输一段信息, 为了方便, 我们拿英文来举例</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Don&apos;t be afraid to shoot a single horse. What about being alone and brave? You can cry all the way, but you can&apos;t be angry. You have to go through the days when nobody cares about it to welcome applause and flowers.</span><br></pre></td></tr></table></figure>
+<p>上面这个句子, 我们统计一下字符的数量, 同样为了方便, 我们只显示 TOP5 的字符</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&apos; &apos;, 41</span><br><span class="line">&apos;a&apos;, 20</span><br><span class="line">&apos;o&apos;, 19</span><br><span class="line">&apos;e&apos;, 16</span><br><span class="line">&apos;t&apos;, 14</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>这样一来, 是不是我用什么二进制代表什么字符对传输总量有着非常大的影响</p>
+<p>用 0 代表’a’ == 1bit * 20 = 20bit<br>用 101 代表’a’ == 3bit * 20 = 60bit</p>
+<h1 id="哈夫曼树"><a href="#哈夫曼树" class="headerlink" title="哈夫曼树"></a>哈夫曼树</h1><p>哈夫曼编码就是解决这个问题的</p>
+<p><code>利用变长编码, 对频率高的用占bit数少的编码, 对频率低的用占bit多的编码</code></p>
+<p>所以我们如何才能构建这个编码呢? 需要两个信息, 字符和字符出现的频率.</p>
+<p>这就涉及到哈夫曼树的生成</p>
+<p>假使有这么一个数组[(‘ ‘, 41),(‘a’, 20),(‘o’, 19),(‘e’, 16),(‘t’, 14)]</p>
+<p>算法是这样的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1. 从数组中取出频率最低的两个数据`(&apos;e&apos;, 16)`和`(&apos;t&apos;, 14)`</span><br><span class="line"></span><br><span class="line">2. 将两个频率相加 16+14==30, 然后将衍生出来的数据, 放进数组里, 字符为`NULL`</span><br><span class="line"></span><br><span class="line">[(&apos; &apos;, 41),(&apos;a&apos;, 20),(&apos;o&apos;, 19), (NULL, 30)]</span><br><span class="line"></span><br><span class="line">接着重复1,2直到数组中的为空</span><br></pre></td></tr></table></figure>
+<p><img src="/resource/6f060ad57fac497da36f3d2a240acee0.png" alt="f34bf0fa970a6bbc8cdbfe9798a43b4b.png"></p>
+<p>根据生成出来的二叉树, 我们可以得出结论.</p>
+<p>叶子节点对应字符出现的频率(也就是权重)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&apos; &apos; 这个字符出现41次, 用0编码(占用1bit)</span><br><span class="line">&apos;o&apos; 这个字符出现19次, 用100编码(占用3bit)</span><br><span class="line">&apos;a&apos; 这个字符出现20次, 用101编码(占用3bit)</span><br><span class="line">&apos;t&apos; 这个字符出现14次, 用110编码(占用3bit)</span><br><span class="line">&apos;e&apos; 这个字符出现16次, 用111编码(占用3bit)</span><br></pre></td></tr></table></figure>
+<p>妙啊, 妙啊, 既减少了, 传输数据的总量, 又不会出现编码的冲突</p>
+<p>这里总共传输的 bit 数是</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1bit * 41 + 3bit * 19 + 3bit * 20 + 3bit * 14 + 3bit * 16 = 246bit</span><br></pre></td></tr></table></figure>
+<p>如果我们用等长编码(8bit)那么总共传输的 bit 数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">8bit * 41 + 8bit * 19 + 8bit * 20 + 8bit * 14 + 8bit * 16 = 880bit</span><br></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>变长编码, 能将减少传输数据的总量</p>
+<p>哈夫曼编码, 能基于字符出现的频率进行不同长度的编码</p>
+<p>保证在大量数据传输的过程中依然有较好的传输效率</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/算法/" rel="tag"># 算法</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/f4b54833899b4b93a4b968318ae4afec/" rel="next" title="qcloud的k8s集群界面编辑导致pod无法启动">
+                <i class="fa fa-chevron-left"></i> qcloud的k8s集群界面编辑导致pod无法启动
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么问题"><span class="nav-number">1.</span> <span class="nav-text">什么问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#举个例子"><span class="nav-number">2.</span> <span class="nav-text">举个例子:</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#编码是什么东西"><span class="nav-number">3.</span> <span class="nav-text">编码是什么东西</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#等长编码"><span class="nav-number">4.</span> <span class="nav-text">等长编码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#变长编码"><span class="nav-number">5.</span> <span class="nav-text">变长编码</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#字符的频率"><span class="nav-number">6.</span> <span class="nav-text">字符的频率</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#哈夫曼树"><span class="nav-number">7.</span> <span class="nav-text">哈夫曼树</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

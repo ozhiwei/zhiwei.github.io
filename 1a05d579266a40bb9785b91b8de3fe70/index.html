@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="监控,elk,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景我们是一家 H5 的游戏公司客户端以网页, 小程序, APP 的方式发布对 CDN 的请求非常的大, 所以 CDN 请求的影响是非常大的. 前提其实一开始是想放在 服务端业务异常日志监控 一起讲的然而因为这里有一些情况不太一样, 细讲起来差异还挺大的.所以这里就拆开单独写了(真的不是为了凑数!!!) 问题 客户端请求 CDN 卡顿 客户端请求服务端卡顿 客户端代码异常  方案elasticse">
+<meta name="keywords" content="监控,elk">
+<meta property="og:type" content="article">
+<meta property="og:title" content="客户端业务异常上报监控">
+<meta property="og:url" content="https://zhiwei.show/1a05d579266a40bb9785b91b8de3fe70/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="背景我们是一家 H5 的游戏公司客户端以网页, 小程序, APP 的方式发布对 CDN 的请求非常的大, 所以 CDN 请求的影响是非常大的. 前提其实一开始是想放在 服务端业务异常日志监控 一起讲的然而因为这里有一些情况不太一样, 细讲起来差异还挺大的.所以这里就拆开单独写了(真的不是为了凑数!!!) 问题 客户端请求 CDN 卡顿 客户端请求服务端卡顿 客户端代码异常  方案elasticse">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/1635ed2790c7497cbc3d358a79fa9c45.png">
+<meta property="og:image" content="https://zhiwei.show/resource/e710d0ac53724f4392bff6fd8a9a7ce6.png">
+<meta property="og:image" content="https://zhiwei.show/resource/a7ae6e6d3af24da78d4b378b88f06e78.png">
+<meta property="og:image" content="https://zhiwei.show/resource/832916c39a744c05b56a68120e75dac5.png">
+<meta property="og:image" content="https://zhiwei.show/resource/6fbc3ad772df4ad190a8d1690351ff33.png">
+<meta property="og:image" content="https://zhiwei.show/resource/cf00887671d842e6933586d29db7c16e.png">
+<meta property="og:image" content="https://zhiwei.show/resource/5a5e8bfaeb6e474595311f81451b1317.png">
+<meta property="og:image" content="https://zhiwei.show/resource/9a0668eb3bd44c878f5b260dd1fe59f1.png">
+<meta property="og:updated_time" content="2020-04-03T04:09:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="客户端业务异常上报监控">
+<meta name="twitter:description" content="背景我们是一家 H5 的游戏公司客户端以网页, 小程序, APP 的方式发布对 CDN 的请求非常的大, 所以 CDN 请求的影响是非常大的. 前提其实一开始是想放在 服务端业务异常日志监控 一起讲的然而因为这里有一些情况不太一样, 细讲起来差异还挺大的.所以这里就拆开单独写了(真的不是为了凑数!!!) 问题 客户端请求 CDN 卡顿 客户端请求服务端卡顿 客户端代码异常  方案elasticse">
+<meta name="twitter:image" content="https://zhiwei.show/resource/1635ed2790c7497cbc3d358a79fa9c45.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/1a05d579266a40bb9785b91b8de3fe70/">
+
+
+
+
+
+  <title>客户端业务异常上报监控 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/1a05d579266a40bb9785b91b8de3fe70/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">客户端业务异常上报监控</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-04-03T12:09:00+08:00">
+                2020-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>我们是一家 H5 的游戏公司<br>客户端以网页, 小程序, APP 的方式发布<br>对 CDN 的请求非常的大, 所以 CDN 请求的影响是非常大的.</p>
+<h1 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h1><p>其实一开始是想放在 <a href="/2020/05/02/服务端业务异常日志监控/">服务端业务异常日志监控</a> 一起讲的<br>然而因为这里有一些情况不太一样, 细讲起来差异还挺大的.<br>所以这里就拆开单独写了(真的不是为了凑数!!!)</p>
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
+<li>客户端请求 CDN 卡顿</li>
+<li>客户端请求服务端卡顿</li>
+<li>客户端代码异常</li>
+</ol>
+<h1 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h1><p>elasticsearch, 存储检索<br>logstash, 上报格式转换<br>kibana, 统计展示<br>openresty, 上报网关<br>(和”隔壁”的架构差不多, 只是用 openresty 替代了 filebeat)</p>
+<p>看图…</p>
+<a id="more"></a>
+<p><img src="/resource/1635ed2790c7497cbc3d358a79fa9c45.png" alt="4586dc3fb08abfda28c6c04ca69b92b1.png"></p>
+<p>这里之所以没有使用 kafka 还是因为量级的原因, 并且 logstash 自带本地持久化</p>
+<ol>
+<li>对于数据的并发性没有高要求</li>
+<li>对于数据的可靠性没有高要求</li>
+</ol>
+<p>我们是这么考虑的</p>
+<ol>
+<li>目前云主机宕机已经很少了</li>
+<li>而且恰好在宕机的时候把硬盘也搞坏了</li>
+<li>而且恰好硬盘里还存留着没有发送的数据</li>
+<li>最后云主机磁盘的 RAID 也跟着坏了.</li>
+</ol>
+<p>即使这些情况都发生了, 最多就是丢失一些上报数据, 完全不响应大局<br>综上所述, 我们没有上 kafka 避免增加维护成本.</p>
+<h1 id="实施"><a href="#实施" class="headerlink" title="实施"></a>实施</h1><h2 id="ELK"><a href="#ELK" class="headerlink" title="ELK"></a>ELK</h2><p>ELK 老生常谈了, 在我们这个数量级的情况下大同小异<br>没什么特殊的地方, 想看请 <a href="/2020/05/02/服务端业务异常日志监控#实施">出门左转</a></p>
+<h2 id="openresty"><a href="#openresty" class="headerlink" title="openresty"></a>openresty</h2><p>openresty 这块, 特意去翻了翻代码<br>发现也没什么好说的, 就是收到请求后<br>使用 resty.http 模块向 logstash 发送请求</p>
+<p>唯一有点需要注意的是, 我们使用使用 json 格式传输<br>为了不影响用户的体验, 发生事件后, 将事件数据 push 进一个数组<br>然后间隔一分钟将整个数组上报</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[</span><br><span class="line">    &#123;</span><br><span class="line">        消息1</span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        消息2</span><br><span class="line">    &#125;</span><br><span class="line">]</span><br></pre></td></tr></table></figure>
+<p>哦哦哦, 对了, 还有一点需要注意.<br>因为面向的是多项目的, 所以可能存在不同版本兼容的问题.<br>可以根据项目对数据格式做解析, 也可以定义版本, 根据版本做解析.<br>这里是根据项目对解析的, 大概是这么个流程</p>
+<p>客户端 -&gt; 网关入口 -&gt; 项目解析 -&gt; 标准格式 -&gt; 请求 logstash</p>
+<h2 id="埋点"><a href="#埋点" class="headerlink" title="埋点"></a>埋点</h2><p>重点来了, 重点来了, 重点来了<br>这里最难的点在于需要和不同项目组的人<code>沟通</code>.</p>
+<ol>
+<li>得先让和他们解释做这个能带来什么<code>帮助</code></li>
+<li>按照文档标准沟通清楚执行并且最后<code>验收</code></li>
+<li>考虑不同项目的情况是否能够<code>实现</code></li>
+</ol>
+<p>先来看看我们是怎么落地的</p>
+<h3 id="CDN-请求超时"><a href="#CDN-请求超时" class="headerlink" title="CDN 请求超时"></a>CDN 请求超时</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">在http请求开始时记录开始时间.</span><br><span class="line">在http请求响应时记录结束时间.</span><br><span class="line"></span><br><span class="line">请求耗时 = 结束时间 - 开始时间</span><br><span class="line"></span><br><span class="line">if 请求耗时 &gt; 5秒 then</span><br><span class="line">    触发CDN请求超时事件</span><br><span class="line">    (记录耗时时间, 账号ID, 请求资源名等...)</span><br></pre></td></tr></table></figure>
+<h3 id="CDN-请求失败"><a href="#CDN-请求失败" class="headerlink" title="CDN 请求失败"></a>CDN 请求失败</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">当请求HTTP失败时</span><br><span class="line">    触发CDN请求失败事件</span><br><span class="line">    (记录耗时时间, 账号ID, 错误类型, 请求资源名等...)</span><br></pre></td></tr></table></figure>
+<h3 id="请求服务端异常"><a href="#请求服务端异常" class="headerlink" title="请求服务端异常"></a>请求服务端异常</h3><p>这里和 CDN 请求有些类似, 就不重复了.<br>区别在于, 这个是用于检测用户连接服务器的状态.<br>可能存在服务端系统问题, 服务端代码问题, 服务端网络问题</p>
+<p>同时这个上报也是需要区分项目的<br>如果项目的消息协议是一来一回的, 比如这样</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">client ----&gt; client_request_login ----&gt; server</span><br><span class="line">server ----&gt; client_request_login_return ----&gt; client</span><br></pre></td></tr></table></figure>
+<p>那这个事情就很好办了, 因为客户端知道收到消息和发送消息如何对应</p>
+<p>如果项目的消息协议是一来多回的, 比如这样</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">client ----&gt; client_request_login ----&gt; server</span><br><span class="line">server ----&gt; update_user_coin ----&gt; client</span><br><span class="line">server ----&gt; update_user_info ----&gt; client</span><br><span class="line">server ----&gt; update_user_friends ----&gt; client</span><br></pre></td></tr></table></figure>
+<p>那就没戏, 因为没法知道收到的消息对应哪条发送的消息, 也就没法判断了.</p>
+<p>有个办法, 在协议上添加一个字段用于请求表示<br>发送协议时和返回协议时都有对应的请求标识<br>但是这样改造的成本较高, 而且项目方不一定愿意配合修改<br>因为投入收益比太低, 所以这一块不太好落地</p>
+<h3 id="客户端代码异常"><a href="#客户端代码异常" class="headerlink" title="客户端代码异常"></a>客户端代码异常</h3><p>这个其实也很简单, 当客户端代码执行异常时.<br>触发一个异常事件, 等待下次一起上报.</p>
+<p>有个重点是对上报的异常信息要做<code>错误位置</code>截取<br>这是为了方便统计同一个错误总共发生了多少次<br>从而优先解决出现率高的异常错误</p>
+<p>我们使用 logstash 的 grok 实现的, 虽然效率不高, 但也能满足我们的需求</p>
+<p>举个例子</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">TypeError: Cannot read property &apos;itemConfig&apos; of null</span><br><span class="line">    at e.IsHas_37TypeItem (https://www.baidu.com/gres/g6/rel/1100/main_6_1100.min.js:2:7760)</span><br><span class="line">    at e.doUpDataItem (https://www.baidu.com/gres/g6/rel/1100/main_6_1100.min.js:2:7140)</span><br><span class="line">    at Function.t.HandlerType (https://www.baidu.com/gres/g6/rel/1100/main_6_1100.min.js:33:14188)</span><br><span class="line">    at Function.e.Dispatch (https://www.baidu.com/gres/g6/rel/1100/main_6_1100.min.js:13:14669)</span><br><span class="line">    at t.UpdateDispatch (https://www.baidu.com/gres/g6/rel/1100/main_6_1100.min.js:222:15347)</span><br><span class="line">    at i.update (https://www.baidu.com/gres/g6/res/start_res/991/merged1.js:4:9583)</span><br><span class="line">    at t (https://www.baidu.com/gres/g6/res/start_res/991/merged1.js:10:11261)</span><br></pre></td></tr></table></figure>
+<p>像上面的报错信息, 我们需要截取<code>main_6_1100.min.js:2:7760</code>来作为错误位置来进行聚合统计<br>可以使用下面这个 grok 的表达式来捕获这个错误位置的信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">grok &#123;</span><br><span class="line">    match =&gt; &#123;</span><br><span class="line">        &quot;message&quot; =&gt; [</span><br><span class="line">            &quot;^.+?(?&lt;fileline&gt;[\w\.]+\.js:[0-9]+:[0-9]+).+$&quot;</span><br><span class="line">        ]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这样就会在上报的数据中添加了一个 fileline 字段来代表异常错误的位置信息.</p>
+<h2 id="监控"><a href="#监控" class="headerlink" title="监控"></a>监控</h2><p><a href="/2020/05/02/服务端业务异常日志监控#监控检测">出门左转</a></p>
+<h1 id="效果"><a href="#效果" class="headerlink" title="效果"></a>效果</h1><h2 id="请求-CDN-监控效果"><a href="#请求-CDN-监控效果" class="headerlink" title="请求 CDN 监控效果"></a>请求 CDN 监控效果</h2><p><img src="/resource/e710d0ac53724f4392bff6fd8a9a7ce6.png" alt="3f1a8432458d331ceed529efbb7f4a6f.png"><br><img src="/resource/a7ae6e6d3af24da78d4b378b88f06e78.png" alt="92236531cae1cda90fcb45dfb4ea626a.png"></p>
+<h2 id="请求服务端监控效果"><a href="#请求服务端监控效果" class="headerlink" title="请求服务端监控效果"></a>请求服务端监控效果</h2><p><img src="/resource/832916c39a744c05b56a68120e75dac5.png" alt="c6620b1ced4f746d010d986db874e6be.png"><br><img src="/resource/6fbc3ad772df4ad190a8d1690351ff33.png" alt="1f70c7b0bccc7328e117701e4165e1b7.png"></p>
+<p>这里解释下, 为什么上图请求服务端的失败统计表为空.<br>是因为请求服务端失败时记录协议 ID 实现的<code>成本较高</code><br>而根据协议 ID 统计出的信息也不具备<code>指导性意见</code></p>
+<p>所以我们就没有纠结这个问题了</p>
+<h2 id="客户端代码异常监控效果"><a href="#客户端代码异常监控效果" class="headerlink" title="客户端代码异常监控效果"></a>客户端代码异常监控效果</h2><p><img src="/resource/cf00887671d842e6933586d29db7c16e.png" alt="ff97ff82de4fc84b22f2fa4f2027426a.png"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>就在写这个 Blog 的同时, 我们业务的 CDN 发生了一次故障.</p>
+<p><img src="/resource/5a5e8bfaeb6e474595311f81451b1317.png" alt="630f8e9976b9768a2a47b2ce55fbd817.png"></p>
+<p><img src="/resource/9a0668eb3bd44c878f5b260dd1fe59f1.png" alt="ec2dbdd7f4cc1e76e3f0a4de2450532b.png"></p>
+<p>然而我们并没有做相应的监控, 导致响应不及时(主要是没时间精力)<br>由此可见这块监控效果如何, 如果我们能及时的监控报警<br>那么整个团队面对问题的响应速度会非常的块, 从而提升我们产品的质量</p>
+<p>说了好的, 总要说说坏的.</p>
+<ol>
+<li>只能被动的发现问题, 但我们的目标是没有蛀牙</li>
+<li>根据项目的不同, 难以实现统一标准, 维护成本过高</li>
+<li>监控的覆盖率较低, 只能发现重大问题, 对于平时的运营帮助较小</li>
+</ol>
+<p>以上</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/监控/" rel="tag"># 监控</a>
+          
+            <a href="/tags/elk/" rel="tag"># elk</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/993b27b34e7a4165a667a75dcf128296/" rel="next" title="业务监控整理总结">
+                <i class="fa fa-chevron-left"></i> 业务监控整理总结
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/faa6264186c549e2872823cad0749b68/" rel="prev" title="nginx的mirror模块请求返回400状态">
+                nginx的mirror模块请求返回400状态 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#前提"><span class="nav-number">2.</span> <span class="nav-text">前提</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">3.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#方案"><span class="nav-number">4.</span> <span class="nav-text">方案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实施"><span class="nav-number">5.</span> <span class="nav-text">实施</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#ELK"><span class="nav-number">5.1.</span> <span class="nav-text">ELK</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#openresty"><span class="nav-number">5.2.</span> <span class="nav-text">openresty</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#埋点"><span class="nav-number">5.3.</span> <span class="nav-text">埋点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#CDN-请求超时"><span class="nav-number">5.3.1.</span> <span class="nav-text">CDN 请求超时</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#CDN-请求失败"><span class="nav-number">5.3.2.</span> <span class="nav-text">CDN 请求失败</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#请求服务端异常"><span class="nav-number">5.3.3.</span> <span class="nav-text">请求服务端异常</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端代码异常"><span class="nav-number">5.3.4.</span> <span class="nav-text">客户端代码异常</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监控"><span class="nav-number">5.4.</span> <span class="nav-text">监控</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#效果"><span class="nav-number">6.</span> <span class="nav-text">效果</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#请求-CDN-监控效果"><span class="nav-number">6.1.</span> <span class="nav-text">请求 CDN 监控效果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#请求服务端监控效果"><span class="nav-number">6.2.</span> <span class="nav-text">请求服务端监控效果</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#客户端代码异常监控效果"><span class="nav-number">6.3.</span> <span class="nav-text">客户端代码异常监控效果</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

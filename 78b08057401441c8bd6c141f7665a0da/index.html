@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="openresty,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="需求H5 游戏研发公司需要将 H5 项目的 URL 给合作方进行测试, 问题避免游戏地址被外部传播 方案使用 openrestry 作为反向代理在后台通过对项目地址, 过期时间等信息进行对称加密.生成一个 url 链接，然后发送给合作方 合作方使用浏览器打开 url 时， openresty 会收到 http 请求并对 url 参数中的加密信息进行解密, 获取项目地址，过期时间等相关的信息 如果当">
+<meta name="keywords" content="openresty">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用openresty构建的外部测试网关">
+<meta property="og:url" content="https://zhiwei.show/78b08057401441c8bd6c141f7665a0da/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="需求H5 游戏研发公司需要将 H5 项目的 URL 给合作方进行测试, 问题避免游戏地址被外部传播 方案使用 openrestry 作为反向代理在后台通过对项目地址, 过期时间等信息进行对称加密.生成一个 url 链接，然后发送给合作方 合作方使用浏览器打开 url 时， openresty 会收到 http 请求并对 url 参数中的加密信息进行解密, 获取项目地址，过期时间等相关的信息 如果当">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/4c9391d9f71d4e42b1632b80bfd725e6.png">
+<meta property="og:updated_time" content="2021-03-10T01:33:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用openresty构建的外部测试网关">
+<meta name="twitter:description" content="需求H5 游戏研发公司需要将 H5 项目的 URL 给合作方进行测试, 问题避免游戏地址被外部传播 方案使用 openrestry 作为反向代理在后台通过对项目地址, 过期时间等信息进行对称加密.生成一个 url 链接，然后发送给合作方 合作方使用浏览器打开 url 时， openresty 会收到 http 请求并对 url 参数中的加密信息进行解密, 获取项目地址，过期时间等相关的信息 如果当">
+<meta name="twitter:image" content="https://zhiwei.show/resource/4c9391d9f71d4e42b1632b80bfd725e6.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/78b08057401441c8bd6c141f7665a0da/">
+
+
+
+
+
+  <title>使用openresty构建的外部测试网关 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/78b08057401441c8bd6c141f7665a0da/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">使用openresty构建的外部测试网关</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-10T09:33:00+08:00">
+                2020-12-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h2><p>H5 游戏研发公司<br>需要将 H5 项目的 URL 给合作方进行测试,</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>避免游戏地址被外部传播</p>
+<h2 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h2><p>使用 openrestry 作为反向代理<br>在后台通过对项目地址, 过期时间等信息进行对称加密.<br>生成一个 url 链接，然后发送给合作方</p>
+<p>合作方使用浏览器打开 url 时， openresty 会收到 http 请求<br>并对 url 参数中的加密信息进行解密, 获取项目地址，过期时间等相关的信息</p>
+<p>如果当前时间大于过期时间则返回相应过期提示<br>如果当前时间小于过期时间则通过 proxy_pass 进行代理请求</p>
+<p>大致的情况就是这样了</p>
+<p>client—-gateway url—-&gt;openresty—-project url—-&gt;project<br>client&lt;—-response data—-openresty&lt;—-response data—-project</p>
+<a id="more"></a>
+<h2 id="续期"><a href="#续期" class="headerlink" title="续期"></a>续期</h2><p>一直相安无事， 突然有了一个需求<br>过期时间在生成链接时是确定的<br>但是合作方可能还想在体验一下</p>
+<p>简单的方法就是直接重新生成一个新链接<br>但是体验很不好， 因为合作方可能有多个人在测试<br>这样的话， 就需要将新链接通知到 N 个人<br>麻烦且低效</p>
+<h2 id="方案-1"><a href="#方案-1" class="headerlink" title="方案 1"></a>方案 1</h2><p>所以我们需要找到一个方法能对发出去的 url 进行续期操作<br>先想到了一个方法， 对每个生成的 url 都有一个 id<br>续期时直接传送一个参数 id 来定位一个 url, 然后进行相应的操作<br>这样 openresty 这边就需要构建一个数据库将所有的 url 记录下来</p>
+<p>原本 openresty 这只是一个过期的判断<br>如果这样修改则需要生成一堆的数据信息<br>能不能简单点</p>
+<h2 id="方案-2"><a href="#方案-2" class="headerlink" title="方案 2"></a>方案 2</h2><p>我们可以直接将 url 的加密信息作为 key<br>存在 redis 中， 然后设置这个 key 的过期时间<br>这样既能满足需求，逻辑简单，改动也少</p>
+<p>请求 url 代理的逻辑</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">在redis中查找是否有以&quot;加密信息&quot;为key的value</span><br><span class="line">如果存在</span><br><span class="line">	进行代理</span><br><span class="line">否则</span><br><span class="line">	将加密信息解密</span><br><span class="line">	对过期时间进行判断</span><br><span class="line">	如果过期</span><br><span class="line">		返回过期提示</span><br><span class="line">	否则</span><br><span class="line">		进行代理</span><br></pre></td></tr></table></figure>
+<p>设置 url 续期逻辑</p>
+<p>直接将 url 的加密信息作为 redis 的 key 存储起来，并设置相应的 ttl</p>
+<h2 id="openresty-请求阶段问题"><a href="#openresty-请求阶段问题" class="headerlink" title="openresty 请求阶段问题"></a>openresty 请求阶段问题</h2><p><img src="/resource/4c9391d9f71d4e42b1632b80bfd725e6.png" alt="4b3e6bc0d0331001c26567cfcc68a8b9.png"></p>
+<p>因为需要使用 pass_proxy 对项目 url 进行代理<br>所以我们在 set_by_lua 阶段对请求的 url 进行解密来获取项目的 URL 地址<br>并且直接在 set_by_lua 中进行判断是否过期(本质上是个时间比较)</p>
+<p>但是在 set_by_lua 阶段不能访问 redis 的外部服务(因为性能)<br>所以最后我们先在 set_by_lua 阶段生成代理的 url<br>然后在 access_by_lua 阶段判断请求的 url 是否过期</p>
+<p>以上是我们在外部测试网关管理的问题和总结</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/openresty/" rel="tag"># openresty</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/4ec7a130f7bb4ac48dfae71508b462e7/" rel="next" title="游戏业务数据库集中式储存的问题">
+                <i class="fa fa-chevron-left"></i> 游戏业务数据库集中式储存的问题
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/34f2635ca876481da35832a0995e4875/" rel="prev" title="flink启动job随机卡住故障排查">
+                flink启动job随机卡住故障排查 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#需求"><span class="nav-number">1.</span> <span class="nav-text">需求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">2.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案"><span class="nav-number">3.</span> <span class="nav-text">方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#续期"><span class="nav-number">4.</span> <span class="nav-text">续期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案-1"><span class="nav-number">5.</span> <span class="nav-text">方案 1</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#方案-2"><span class="nav-number">6.</span> <span class="nav-text">方案 2</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#openresty-请求阶段问题"><span class="nav-number">7.</span> <span class="nav-text">openresty 请求阶段问题</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="tcpdump,docker,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="背景问题公司需要对用户的行为做分析所以在服务端上通过 HTTP 的方式上报数据 想要将上报数据的网关容器化了方面以后的维护和管理 因为节点少, 相对于 K8S 来说太重了.所以准备尝试一下 Docker Swarm 没想到在测试环境没问题, 一上生产.结果立马出现了一大堆上报失败的错误 吓的我立马回滚了操作, 再慢慢来排查.">
+<meta name="keywords" content="tcpdump,docker">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Docker-Swarm尝试引发的并发问题">
+<meta property="og:url" content="https://zhiwei.show/b078bce7c017421483ca473014d6f081/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="背景问题公司需要对用户的行为做分析所以在服务端上通过 HTTP 的方式上报数据 想要将上报数据的网关容器化了方面以后的维护和管理 因为节点少, 相对于 K8S 来说太重了.所以准备尝试一下 Docker Swarm 没想到在测试环境没问题, 一上生产.结果立马出现了一大堆上报失败的错误 吓的我立马回滚了操作, 再慢慢来排查.">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/b476f3fded4c4e85966bf3c56ae3aaa4.png">
+<meta property="og:image" content="https://zhiwei.show/resource/dd169658678340ee85e7fc054b25ea1a.png">
+<meta property="og:image" content="https://zhiwei.show/resource/f6ed6b40bc9742ae87233e9c7ac8e6b9.png">
+<meta property="og:updated_time" content="2020-05-18T00:50:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Docker-Swarm尝试引发的并发问题">
+<meta name="twitter:description" content="背景问题公司需要对用户的行为做分析所以在服务端上通过 HTTP 的方式上报数据 想要将上报数据的网关容器化了方面以后的维护和管理 因为节点少, 相对于 K8S 来说太重了.所以准备尝试一下 Docker Swarm 没想到在测试环境没问题, 一上生产.结果立马出现了一大堆上报失败的错误 吓的我立马回滚了操作, 再慢慢来排查.">
+<meta name="twitter:image" content="https://zhiwei.show/resource/b476f3fded4c4e85966bf3c56ae3aaa4.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/b078bce7c017421483ca473014d6f081/">
+
+
+
+
+
+  <title>Docker-Swarm尝试引发的并发问题 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/b078bce7c017421483ca473014d6f081/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">Docker-Swarm尝试引发的并发问题</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-18T08:50:00+08:00">
+                2020-05-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="背景问题"><a href="#背景问题" class="headerlink" title="背景问题"></a>背景问题</h1><p>公司需要对用户的行为做分析<br>所以在服务端上通过 HTTP 的方式上报数据</p>
+<p>想要将上报数据的网关容器化了<br>方面以后的维护和管理</p>
+<p>因为节点少, 相对于 K8S 来说太重了.<br>所以准备尝试一下 Docker Swarm</p>
+<p>没想到在测试环境没问题, 一上生产.<br>结果立马出现了一大堆上报失败的错误</p>
+<p>吓的我立马回滚了操作, 再慢慢来排查.</p>
+<a id="more"></a>
+<h1 id="排查思路"><a href="#排查思路" class="headerlink" title="排查思路"></a>排查思路</h1><p>先看看架构图</p>
+<p><img src="/resource/b476f3fded4c4e85966bf3c56ae3aaa4.png" alt="278ebb5695adfc8d3e0c35f679b474c6.png"></p>
+<p>是挺简单的, 从设计上来看不怎么可靠.</p>
+<p>因为在测试环境上进行过测试, 但在生产上就问题.<br>所以只能通过 nginx 的 mirror 模块将生产环境的 HTTP 请求转发给测试环境<br>来排查问题.</p>
+<h2 id="大量-TIMEWAIT-的问题"><a href="#大量-TIMEWAIT-的问题" class="headerlink" title="大量 TIMEWAIT 的问题"></a>大量 TIMEWAIT 的问题</h2><p>查看日志, 发现挺正常的, 请求都一个接着一个.<br>但就是会出现大量的上报失败错误.</p>
+<p>看了 CPU, 内存, IO 都挺正常的<br>因为部分请求是正常的, 所以容器内部肯定会有 TCP 的连接<br>想抓包看看那些不成功请求发生了什么<br>进入容器<code>ss -s</code>一看, 有 6W 多个<code>TIMEWAIT</code><br>关于 TIMEWAIT 的问题, 网上都讲烂了.</p>
+<p>总结一下, 主要为了避免<code>网络上延迟的数据包影响正常的新连接</code></p>
+<p>有两种解决思路.</p>
+<p>第一种<br>开启快速回收, <code>echo 1 &gt; /proc/sys/net/ipv4/tcp_tw_recycle</code><br>开启重复利用, <code>echo 1 &gt; /proc/sys/net/ipv4/tcp_tw_recycle</code></p>
+<p>这两个虽然能快速解决问题, 但是有隐患(往下看)</p>
+<p>第二种<br>避免 TIMEWAIT 的出现.<br>我们知道, 根据 TCP 的四次挥手的过程</p>
+<p><img src="/resource/dd169658678340ee85e7fc054b25ea1a.png" alt="e532ea9cdfec4b174b89770f066f748b.png"></p>
+<p>TCP 的服务端和客户端<code>谁先分手</code>, 谁就有<code>TIMEWAIT</code><br>所以这种解决思路就是由客户端发出断开的数据包</p>
+<p>在 HTTP 的应用层, 有个 HTTP 的头部信息<code>Connection: keep-alive</code><br>这个信息控制双方发送完请求后是否断开 TCP 的连接.</p>
+<p>HTTP1.0 的默认是``Connection: close<code>, 也就是说, 请求完后立马断开连接. HTTP1.1之后默认的都是</code>Connection: keep-alive`, 请求完等待一段时候.</p>
+<p>网上有很多文章介绍, 就不搬运了, 有兴趣的同学自行查找.</p>
+<p>现在来看<br>测试环境上的问题和正常环境无关, 因为正式环境是的请求都是 HTTP1.1<br>服务端不应该会出现大量的<code>TIMEWAIT</code></p>
+<p>一直没想明白, 后来反复的查找资料和实验才找到答案<br>测试环境上大量的的<code>TIMEWAIT</code><br>是因为 nginx 的<code>proxy_http_version</code>指令默认请求的是 HTTP1.0</p>
+<p>这就导致了, 后端服务器处理完请求后就立刻断开连接.<br>根据我们谁先分手原则, 最终服务器有大量的 TIMEWAIT.</p>
+<p>解决方法也很简单</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line">server &#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        proxy_pass http://backend;</span><br><span class="line">        proxy_http_version 1.1;</span><br><span class="line">        proxy_set_header Connection &quot;&quot;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有点奇怪的是<code>proxy_set_header Connection &quot;&quot;;</code>是什么东西.<br>为什么要清空 HTTP 的<code>Connection</code>信息.</p>
+<p>带着好奇心, 问了一下 google.<br>原来是避免客户端发起了<code>Connection Close</code>, 导致后端服务会和 nginx 直接断开连接.</p>
+<h2 id="TCP-数据包时间过期问题"><a href="#TCP-数据包时间过期问题" class="headerlink" title="TCP 数据包时间过期问题"></a>TCP 数据包时间过期问题</h2><p>讲了这么多, 还是没有弄清楚生产环境为什么会出问题.<br>因为无法在测试环境上复现, 所以再次切换到生产环境上了.<br>还好不是业务系统, 并且有数据有补报机制, 不然可不敢这么玩.</p>
+<p>切到生产上, 问题依旧, 赶紧使用 tcpdump 抓包, 然后还原</p>
+<p><img src="/resource/f6ed6b40bc9742ae87233e9c7ac8e6b9.png" alt="337e268cba0c3cf777c230eb28b1018e.png"></p>
+<p>(不是原图, 原图几乎全是<code>TCP Out-Of-Order</code>)<br>发现全是<code>TCP Out-Of-Order</code>, 简单来说, 就是收到的 TCP 数据包的顺序不对.</p>
+<p>因为 TCP 收到数据包后需要校验确认, 来保证双方的可靠传输.<br>所以收到的 TCP 数据包顺序不对, 无法判断是真的数据丢失, 还是数据错乱.</p>
+<p>至于为什么会引起数据包顺序错误, 这个问题其实网上也有很多案例了.</p>
+<p>简单来说, 内核文件<code>/proc/sys/net/ipv4/tcp_tw_recycle</code>控制是否快速回收<code>TIMEWAIT</code>的 socket<br>而 TIMEWAIT 则是用来避免网络上残留的数据影响了正常的通信.<br>对于同一个连接, 如果收到了<code>过期</code>的数据包就丢弃掉<br>TCP 使用四元组(源 IP,源 PORT,目的 IP,目的 PORT)来表示一个连接的.</p>
+<p>开启<code>tcp_tw_recycle</code>后, TCP 的四元组信息已经不匹配了, 所以只能通过源 IP 来判断<br>可以通过<code>/proc/sys/net/ipv4/tcp_tw_recycle</code>内核文件来控制是否检查同个源 IP 的数据包时间</p>
+<p>除了上面以外, 还有个关键的地方<br><code>docker swarm</code>使用了<code>ipvs snat</code>将所有的请求都变成一个源 IP<br>而这些源 IP 收到数据包发现时间不同, 自然会产生丢弃, 最终导致数据无法传输.</p>
+<h1 id="复盘总结"><a href="#复盘总结" class="headerlink" title="复盘总结"></a>复盘总结</h1><ol>
+<li>本来查一个问题, 结果发现的问题越来越多.</li>
+<li>nginx 的 mirror 是一个很好的生产排查工具, 就是要理解好</li>
+<li>基础性的原理对于排查的思路非常重要.</li>
+</ol>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/tcpdump/" rel="tag"># tcpdump</a>
+          
+            <a href="/tags/docker/" rel="tag"># docker</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/a4f387bec6bc469db9a65aff81e63b6c/" rel="next" title="使用nginx代理跨机房的saltstack使用">
+                <i class="fa fa-chevron-left"></i> 使用nginx代理跨机房的saltstack使用
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/ffb30a139e094665af16e5314e55883d/" rel="prev" title="错误的HTTP头解析引发的故障">
+                错误的HTTP头解析引发的故障 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#背景问题"><span class="nav-number">1.</span> <span class="nav-text">背景问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#排查思路"><span class="nav-number">2.</span> <span class="nav-text">排查思路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#大量-TIMEWAIT-的问题"><span class="nav-number">2.1.</span> <span class="nav-text">大量 TIMEWAIT 的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TCP-数据包时间过期问题"><span class="nav-number">2.2.</span> <span class="nav-text">TCP 数据包时间过期问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复盘总结"><span class="nav-number">3.</span> <span class="nav-text">复盘总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

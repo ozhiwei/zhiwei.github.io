@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="故障,复盘,nginx,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="问题背景突然被抓来协助大数据的上报网关(OpenResty) client -&amp;gt; OpenResty -&amp;gt; Kafka -&amp;gt; ClickHouse 这里的 OpenResty 负责数据的兼容, 过滤, 路由 因为需要经常的修改 OpenResty 的逻辑配合数据分析这边的需求导致改动容易出现问题, 需要搞个测试环境.通过测试环境的验证后, 在更新到正式环境 实施方案是使用 ngi">
+<meta name="keywords" content="故障,复盘,nginx">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nginx的mirror模块请求返回400状态">
+<meta property="og:url" content="https://zhiwei.show/faa6264186c549e2872823cad0749b68/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="问题背景突然被抓来协助大数据的上报网关(OpenResty) client -&amp;gt; OpenResty -&amp;gt; Kafka -&amp;gt; ClickHouse 这里的 OpenResty 负责数据的兼容, 过滤, 路由 因为需要经常的修改 OpenResty 的逻辑配合数据分析这边的需求导致改动容易出现问题, 需要搞个测试环境.通过测试环境的验证后, 在更新到正式环境 实施方案是使用 ngi">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="https://zhiwei.show/resource/a184ff5524b4456c8ee89270c95ada50.png">
+<meta property="og:updated_time" content="2020-05-10T01:37:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="nginx的mirror模块请求返回400状态">
+<meta name="twitter:description" content="问题背景突然被抓来协助大数据的上报网关(OpenResty) client -&amp;gt; OpenResty -&amp;gt; Kafka -&amp;gt; ClickHouse 这里的 OpenResty 负责数据的兼容, 过滤, 路由 因为需要经常的修改 OpenResty 的逻辑配合数据分析这边的需求导致改动容易出现问题, 需要搞个测试环境.通过测试环境的验证后, 在更新到正式环境 实施方案是使用 ngi">
+<meta name="twitter:image" content="https://zhiwei.show/resource/a184ff5524b4456c8ee89270c95ada50.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/faa6264186c549e2872823cad0749b68/">
+
+
+
+
+
+  <title>nginx的mirror模块请求返回400状态 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/faa6264186c549e2872823cad0749b68/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">nginx的mirror模块请求返回400状态</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-10T09:37:00+08:00">
+                2020-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>突然被抓来协助大数据的上报网关(OpenResty)</p>
+<p>client -&gt; OpenResty -&gt; Kafka -&gt; ClickHouse</p>
+<p>这里的 OpenResty 负责数据的兼容, 过滤, 路由</p>
+<p>因为需要经常的修改 OpenResty 的逻辑配合数据分析这边的需求<br>导致改动容易出现问题, 需要搞个测试环境.<br>通过测试环境的验证后, 在更新到正式环境</p>
+<p>实施方案是使用 nginx 的 mirror 模块将请求镜像到测试站点.<br>同样的代码和配置, 通过环境变量来区分生产和测试环境</p>
+<p>大概是这样的.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">                                (不返回client)</span><br><span class="line">client &lt;-------------&gt; nginx &lt;-------------&gt; mirror</span><br></pre></td></tr></table></figure>
+<p>那么问题来了<br>在实施中, 请求主站点时, 镜像站点也能收到请求<br>但一直显示<code>status_code 400</code>, 从表现上来看像是 POST 的数据丢失了.<br>在 nginx 的 log_format 把<code>$request_body</code>参数加上, 发现确实 POST 数据没有.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">172.19.0.1 - [08/May/2020:06:35:09] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br><span class="line">172.19.0.1 - [08/May/2020:07:01:09] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br><span class="line">172.19.0.1 - [08/May/2020:07:02:43] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h1 id="思路验证"><a href="#思路验证" class="headerlink" title="思路验证"></a>思路验证</h1><h2 id="nginx-的配置问题"><a href="#nginx-的配置问题" class="headerlink" title="nginx 的配置问题?"></a>nginx 的配置问题?</h2><p>难道是的配置有问题?</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line"></span><br><span class="line">mirror /mirror;</span><br><span class="line"></span><br><span class="line">location /mirror &#123;</span><br><span class="line">    internal;</span><br><span class="line">    proxy_pass http://127.0.0.1:8080$request_uri;</span><br><span class="line">    proxy_set_header X-Original-URI $request_uri;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>主站点上日志的 POST 数据是没问题的, 所以很容易怀疑是 mirror 配置的问题</p>
+<p>查看 nginx 的官网发现<code>mirror_request_body</code>是用于控制镜像请求时是否附带 body 数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Syntax:	mirror_request_body on | off;</span><br><span class="line">Default:</span><br><span class="line">mirror_request_body on;</span><br><span class="line">Context:	http, server, location</span><br></pre></td></tr></table></figure>
+<p>但这个参数默认是打开的, 所以不是这个问题.</p>
+<h2 id="OpenResty-的版本问题"><a href="#OpenResty-的版本问题" class="headerlink" title="OpenResty 的版本问题?"></a>OpenResty 的版本问题?</h2><p>因为使用的 docker 来搭建的开发环境<br>并且长时间没有更新, 所以怀疑是不是版本兼容问题.<br>使用<code>docker pull OpenResty/OpenResty</code>更新后发现…<br>也不是这个问题</p>
+<h2 id="业务配置的问题"><a href="#业务配置的问题" class="headerlink" title="业务配置的问题?"></a>业务配置的问题?</h2><p>现在无法确定是主站点上的配置问题, 还是镜像站点上配置的问题.<br>所以使用 nginx 镜像配置了个干净的环境来进行测试.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">server &#123;</span><br><span class="line">    listen 8080 ssl http2</span><br><span class="line"></span><br><span class="line">    location / &#123;</span><br><span class="line">        return 200;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<p>结果还是一样, 那么镜像站点的配置问题排除.</p>
+<p>同样的使用 nginx 配置一个干净的主站点环境, 测试…<br>结果还是一样…</p>
+<h2 id="抓包确认"><a href="#抓包确认" class="headerlink" title="抓包确认"></a>抓包确认</h2><p>当时就纳闷了, 既然请求通过 mirror 模块发起请求都会出现问题.<br>那就确定了一下, 到底发出来的请求数据有没有问题.</p>
+<p>先将 mirror 的地址改成本机(本地开发环境), 然后开启<code>Wireshark</code>抓包</p>
+<p><img src="/resource/a184ff5524b4456c8ee89270c95ada50.png" alt="0fa3315fc3faac41c1ed40363b1ea14d.png"></p>
+<p>这么看来 mirror 模块的请求的 POST 数据是没问题的.</p>
+<h2 id="问题定位"><a href="#问题定位" class="headerlink" title="问题定位"></a>问题定位</h2><p>现在我们知道了, 请求的数据是没问题的<br>但是通过 mirror 模块请求的 status_code 有问题<br>那就直接请求测试站点看看…</p>
+<p>结果真相来了.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;html&gt;</span><br><span class="line"></span><br><span class="line">&lt;head&gt;</span><br><span class="line">	&lt;title&gt;400 The plain HTTP request was sent to HTTPS port&lt;/title&gt;</span><br><span class="line">&lt;/head&gt;</span><br><span class="line"></span><br><span class="line">&lt;body&gt;</span><br><span class="line">	&lt;center&gt;</span><br><span class="line">		&lt;h1&gt;400 Bad Request&lt;/h1&gt;</span><br><span class="line">	&lt;/center&gt;</span><br><span class="line">	&lt;center&gt;The plain HTTP request was sent to HTTPS port&lt;/center&gt;</span><br><span class="line">	&lt;hr&gt;</span><br><span class="line">	&lt;center&gt;OpenResty/1.15.8.3&lt;/center&gt;</span><br><span class="line">&lt;/body&gt;</span><br><span class="line"></span><br><span class="line">&lt;/html&gt;</span><br></pre></td></tr></table></figure>
+<p>镜像站点的配置和主站点是一致的, 都是基于 ssl 的.<br>而主站点里的 mirror 模块使用的是<code>proxy_pass http://127.0.0.1:8080$request_uri;</code></p>
+<p>至此问题定位完毕, 修复起来也就很简单了.</p>
+<h1 id="复盘总结"><a href="#复盘总结" class="headerlink" title="复盘总结"></a>复盘总结</h1><h2 id="细节问题"><a href="#细节问题" class="headerlink" title="细节问题"></a>细节问题</h2><p>配置文件是直接复制的, 所以没有注意到细节.</p>
+<h2 id="对-http-status-code-理解不深刻"><a href="#对-http-status-code-理解不深刻" class="headerlink" title="对 http status_code 理解不深刻"></a>对 http status_code 理解不深刻</h2><p>之前工作中一直碰到的 400 都是缺少参数导致服务器处理不了</p>
+<p>其实真正的意思是说 client 的请求错误, 不仅仅是参数, 经验主义啊.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">6.5.1.  400 Bad Request</span><br><span class="line"></span><br><span class="line">   The 400 (Bad Request) status code indicates that the server cannot or</span><br><span class="line">   will not process the request due to something that is perceived to be</span><br><span class="line">   a client error (e.g., malformed request syntax, invalid request</span><br><span class="line">   message framing, or deceptive request routing).</span><br></pre></td></tr></table></figure>
+<h2 id="从设计上来看"><a href="#从设计上来看" class="headerlink" title="从设计上来看"></a>从设计上来看</h2><p>为什么设计上不将 http 请求 https 的错误作为一个独立的 status_code<br>猜测可能是因为将错误信息输出在了 respone text 里<br>所以就没有必要将单独作为一个 status_code, 毕竟这种情况也不常见.</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/故障/" rel="tag"># 故障</a>
+          
+            <a href="/tags/复盘/" rel="tag"># 复盘</a>
+          
+            <a href="/tags/nginx/" rel="tag"># nginx</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/1a05d579266a40bb9785b91b8de3fe70/" rel="next" title="客户端业务异常上报监控">
+                <i class="fa fa-chevron-left"></i> 客户端业务异常上报监控
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/a4f387bec6bc469db9a65aff81e63b6c/" rel="prev" title="使用nginx代理跨机房的saltstack使用">
+                使用nginx代理跨机房的saltstack使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题背景"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#思路验证"><span class="nav-number">2.</span> <span class="nav-text">思路验证</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#nginx-的配置问题"><span class="nav-number">2.1.</span> <span class="nav-text">nginx 的配置问题?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenResty-的版本问题"><span class="nav-number">2.2.</span> <span class="nav-text">OpenResty 的版本问题?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#业务配置的问题"><span class="nav-number">2.3.</span> <span class="nav-text">业务配置的问题?</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#抓包确认"><span class="nav-number">2.4.</span> <span class="nav-text">抓包确认</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题定位"><span class="nav-number">2.5.</span> <span class="nav-text">问题定位</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#复盘总结"><span class="nav-number">3.</span> <span class="nav-text">复盘总结</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#细节问题"><span class="nav-number">3.1.</span> <span class="nav-text">细节问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对-http-status-code-理解不深刻"><span class="nav-number">3.2.</span> <span class="nav-text">对 http status_code 理解不深刻</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从设计上来看"><span class="nav-number">3.3.</span> <span class="nav-text">从设计上来看</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

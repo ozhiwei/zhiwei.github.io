@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="en">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="mysql,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="问题背景之前有提到过, 我们将游戏本地的数据库集中起来进行存储. 在整体方面是有了大幅度的提升, 包括迁移, 监控, 高可用, 以及备份. 尤其时在迁移方面, 我们将单个服10-30分钟的迁移时间压缩到了1-3分钟(不用迁移数据库). 然而, 之前的的数据库瓶颈分布在 5,6 台主机上, 现在却集中在一台 4 核 16G 的主机上. 这明显会产生其他的问题, 比如我们处理过的 CPU 高突发以及">
+<meta name="keywords" content="mysql">
+<meta property="og:type" content="article">
+<meta property="og:title" content="游戏业务数据库集中式储存的问题">
+<meta property="og:url" content="https://zhiwei.show/4ec7a130f7bb4ac48dfae71508b462e7/index.html">
+<meta property="og:site_name" content="ZhiWei Show">
+<meta property="og:description" content="问题背景之前有提到过, 我们将游戏本地的数据库集中起来进行存储. 在整体方面是有了大幅度的提升, 包括迁移, 监控, 高可用, 以及备份. 尤其时在迁移方面, 我们将单个服10-30分钟的迁移时间压缩到了1-3分钟(不用迁移数据库). 然而, 之前的的数据库瓶颈分布在 5,6 台主机上, 现在却集中在一台 4 核 16G 的主机上. 这明显会产生其他的问题, 比如我们处理过的 CPU 高突发以及">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2020-09-26T20:24:00.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="游戏业务数据库集中式储存的问题">
+<meta name="twitter:description" content="问题背景之前有提到过, 我们将游戏本地的数据库集中起来进行存储. 在整体方面是有了大幅度的提升, 包括迁移, 监控, 高可用, 以及备份. 尤其时在迁移方面, 我们将单个服10-30分钟的迁移时间压缩到了1-3分钟(不用迁移数据库). 然而, 之前的的数据库瓶颈分布在 5,6 台主机上, 现在却集中在一台 4 核 16G 的主机上. 这明显会产生其他的问题, 比如我们处理过的 CPU 高突发以及">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://zhiwei.show/4ec7a130f7bb4ac48dfae71508b462e7/">
+
+
+
+
+
+  <title>游戏业务数据库集中式储存的问题 | ZhiWei Show</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="en">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ZhiWei Show</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">Just Show Me</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/4ec7a130f7bb4ac48dfae71508b462e7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">游戏业务数据库集中式储存的问题</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-27T04:24:00+08:00">
+                2020-09-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>之前有提到过, 我们将游戏本地的数据库集中起来进行存储.</p>
+<p>在整体方面是有了大幅度的提升, 包括迁移, 监控, 高可用, 以及备份.</p>
+<p>尤其时在迁移方面, 我们将单个服<code>10-30</code>分钟的迁移时间压缩到了<code>1-3</code>分钟(不用迁移数据库).</p>
+<p>然而, 之前的的数据库瓶颈分布在 5,6 台主机上, 现在却集中在一台 4 核 16G 的主机上.</p>
+<p>这明显会产生其他的问题, 比如我们处理过的 CPU 高突发以及 binlog 数据量过大.</p>
+<p>以及目前碰到了二个新问题</p>
+<a id="more"></a>
+<h1 id="新增字段"><a href="#新增字段" class="headerlink" title="新增字段"></a>新增字段</h1><p>游戏启动时, 会对数据库的表进行检测, 如果不存在则进行新增字段</p>
+<p>所以我们更新维护时间会特别长, 之前数据都是分布在游戏服上的</p>
+<p>所以整体上能在一个小时内全部解决.</p>
+<p>但是将数据库独立出来集中存储后, 突然到了某个临界值, 问题就来了.</p>
+<p>因为使用的云数据库, 所以只有看到数据层面的监控信息.</p>
+<p>从监控上看是因为 CPU 过高, 所以当时就觉得是 CPU 瓶颈.</p>
+<p>看了下慢查询的日志, 发现大多数都是 update 全表的 sql 语句.</p>
+<p>找研发问了问什么情况, 得到答复是为了保证数据的一致性.</p>
+<p>在新增字段后后对整表进行一次 update 来初始化字段.</p>
+<p>因为使用的是 BLOB 字段, 所以无法设置初始值.</p>
+<p>当时我还真就以为是全表的 update 导致维护时间边长.</p>
+<p>再三的和研发沟通, 看看是否能避免这个操作, 然而并不能.</p>
+<p>另外, 有个问题一直没想明白.</p>
+<p>我们大概有 100 多个数据库, 同时加字段, 然后全表 update</p>
+<p>从 10:30 一直到 16:30, 都没有弄完.</p>
+<p>我们只能把全停掉, 然后 10 个 10 个一组, 才能正常的完成启动.</p>
+<p>什么原因, 数据的总量是不变的, 而且数据库都是独立的(一台服务器), 所以应该不存在锁的问题.</p>
+<p>大概了解了一下 mysql 加字段原理,</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 首先, 对原始表结构COPY了一份</span><br><span class="line">2. 然后对拷贝出来的表结构进行新增字段</span><br><span class="line">3. 接着将原始表中的数据复制到拷贝出现的新表.</span><br><span class="line">4. 最后锁表, 删除原表, 将新表改名成原表.</span><br></pre></td></tr></table></figure>
+<p>因为云数据库没法看到 I/O 的情况, 所以我们只能在本地进行测试</p>
+<p>发现新增字段的过程涉及到大量的 I/O 操作.</p>
+<p>在<code>stackoverflow</code>上看了下, 有几个解决方案</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">1. pt-online-schema-change</span><br><span class="line"></span><br><span class="line">这个适合在线业务加字段, 能够在不影响业务的情况下实现修改表结构</span><br><span class="line">在copy新表的时候通过insert,update,delete触发器来对新表进行同步.</span><br><span class="line">需要满足一定的条件才能使用, 不适合我们</span><br><span class="line"></span><br><span class="line">2. mysql8.0的instant</span><br><span class="line"></span><br><span class="line">我们使用的云数据库是5.7的, 也不可能升级到8.0, 怕HOLD不住</span><br><span class="line"></span><br><span class="line">3. sql操作前置</span><br><span class="line"></span><br><span class="line">就是将需要新增的字段在人少的时候进行操作, 这个需要更新流程中插入</span><br><span class="line">并且研发也需要提前给出需要新增字段的sql语句, 谈崩.</span><br></pre></td></tr></table></figure>
+<p>最后我们只能将并发的启动改成顺序的启动, 从而避免这个问题.</p>
+<p>但是到底为什么会卡死还没有弄明白, 有机会在研究研究.</p>
+<h1 id="limit-的瓶颈"><a href="#limit-的瓶颈" class="headerlink" title="limit 的瓶颈"></a>limit 的瓶颈</h1><p>需求背景是</p>
+<p>A,B 两个数据库, 要将 A,B 数据库某些表的数据全部取出来, 然后将 B 合并到 A 上.</p>
+<p>需要对冲突的数据进行一些处理, 冲突处理的时间先忽略不计, 数据提取的逻辑是这样的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">total=select count(*) from A</span><br><span class="line"></span><br><span class="line">for (i=0;i&lt;total;i+=10) &#123;</span><br><span class="line">    offset=$i</span><br><span class="line">    select * from A limit $offset 10</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为数据合并很慢, 所以需要找找瓶颈.</p>
+<p>看了下 mysql 的慢日志, 一条语句需要跑 100s</p>
+<p>从云数据库的监控上来看, CPU, qps, 逻辑读和物理读并没有达到瓶颈.</p>
+<p>但是在云数据库上又没法看到 I/O 的情况, 所以当时以为就是 I/O 的问题.</p>
+<p>因为这个 SQL 写法逻辑上就很奇怪, 明明需要获取所有的数据.</p>
+<p>但是却使用 limit 来分批获取, 导致 mysql 每次都要重新读取磁盘的数据.</p>
+<p>和研发沟通几次调整修改, 就是不肯, 非说这是上了云数据库导致的问题.</p>
+<p>要让我们从云数据库上优化, 这就很尴尬了.</p>
+<p>我们只能找云厂商帮忙看看有没其他方法可以优化优化.</p>
+<p>专业的 DBA 一下就看出我们这个 sql 语句有内鬼.</p>
+<p>这里也触及到我的一个知识盲区.</p>
+<p>既然程序一直再跑, 但是 CPU 和 I/O 又没跑满.</p>
+<p>那到底是什么原因导致吞吐量一直上不去.</p>
+<p>就是资源又没跑满, 但是吞吐量却上不去.</p>
+<p>没办法, 只能在本地数据库上进行模拟测试看看.</p>
+<p>经过实践发现, 瓶颈确实在 CPU 上, 之所以 CPU 没跑满</p>
+<p>是因为一条 SQL 语句只占用一个 CPU, 也就是说</p>
+<p>这个这个 sql 分配到一个 CPU 上, 即使这个 SQL 火力全开, 也得 100s 才能执行完成.</p>
+<p>但是执行 sql 又不能利用多核, 毕竟人家不是分布式的数据库.</p>
+<p>那么问题又来了, 总过也才 20000 条的数据.</p>
+<p>将数据从磁盘 load 到内存并没有花费太多的时间</p>
+<p>难道你一个 CPU 在内存遍历 20000 条数据还要按秒算?</p>
+<p>根据数据库的慢日志发现有意思的现象或许可以解释解释</p>
+<p>有 a 表和 b 表, a 表是记录数 20000 左右, b 表记录数 2000000 左右.</p>
+<p>a 是宽表, 单条记录很大, b 表窄表, 单条记录很小</p>
+<p>但是<code>select * from a limit 18000 10</code>比<code>select * from b limit 1800000 10</code>要更慢.</p>
+<p>这就说明 sql 执行的时间不只<code>和offset有关,</code> 还<code>和单条记录的大小有关</code>.</p>
+<p>只是有点想不明白, 记录与记录之间不是应该用链表连接的吗?</p>
+<p>为啥单条记录大, 遍历时间就长, 而单条记录小, 遍历时间就短呢.</p>
+<p>受限于知识水平和时间因素, 暂时搞不明白, 而且还有其他更重要的事, 只能先记录下来.</p>
+<p>扯回来, mysql 的 limit 并不是只消耗取 10 条的数据的时间.</p>
+<p>他要将所有数据全部取出来, 然后过滤掉前 offset 条数据, 只返回接下来的 10 条数据</p>
+<p>可想而知, 当 offset 数越大, 消耗的时候就越多.</p>
+<p>原本是个很简单的问题, 结果研发却硬说是云数据库的问题.</p>
+<p>因为之前在本地数据库上操作是没有这个问题的, 真的是成功的气到我了.</p>
+<p>然后我们只能将数据库复制到本地上, 然后执行同样的合服操作.</p>
+<p>结果证明, 本地的更慢, 确当了问题, 就很好处理了.</p>
+<p>只要避免全表扫描, 就能提高性能, 比较简单的方式是根据主键使用 where 过滤.</p>
+<p>走索引比全表扫描快 N 多倍, 之前一条 sql 需要 100s, 走索引后只需 0.1s</p>
+<p>至于为什么不把数据全部取出来处理, 据说是因为框架不支持.</p>
+<p>我也没细问, 这又是另一个故事了.</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 上云数据库有得有失吧, 感觉是利大于弊, 应该确实暴露出很多不合理的使用</span><br><span class="line">2. 对mysql原理方面还有待提高, 以及计算机系统方面也有些理解的不到位</span><br><span class="line">3. 业务上有很大的提升, 之前数据合并需要1个多小时, 现在可能只需要几分钟</span><br><span class="line">4. 自己也将学到的知识点结合实际进行验证, 但第一次没有对思路进行验证, 这个需要注意</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/mysql/" rel="tag"># mysql</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/4da7bf5f40c24ab385e61585da25c951/" rel="next" title="本地数据库迁移至云数据库的复盘总结">
+                <i class="fa fa-chevron-left"></i> 本地数据库迁移至云数据库的复盘总结
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/78b08057401441c8bd6c141f7665a0da/" rel="prev" title="使用openresty构建的外部测试网关">
+                使用openresty构建的外部测试网关 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ZhiWei</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题背景"><span class="nav-number">1.</span> <span class="nav-text">问题背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#新增字段"><span class="nav-number">2.</span> <span class="nav-text">新增字段</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#limit-的瓶颈"><span class="nav-number">3.</span> <span class="nav-text">limit 的瓶颈</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ZhiWei</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

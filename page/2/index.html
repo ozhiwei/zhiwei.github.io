@@ -191,16 +191,6 @@
         </li>
       
         
-        <li class="menu-item menu-item-categories">
-          <a href="/categories/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
-            
-            Categories
-          </a>
-        </li>
-      
-        
         <li class="menu-item menu-item-tags">
           <a href="/tags/" rel="section">
             
@@ -263,7 +253,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/993b27b34e7a4165a667a75dcf128296/">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/b078bce7c017421483ca473014d6f081/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ZhiWei">
@@ -282,7 +272,7 @@
         
           <h2 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/03/10/993b27b34e7a4165a667a75dcf128296/" itemprop="url">业务监控整理总结</a></h2>
+                <a class="post-title-link" href="/b078bce7c017421483ca473014d6f081/" itemprop="url">Docker-Swarm尝试引发的并发问题</a></h2>
         
 
         <div class="post-meta">
@@ -295,8 +285,533 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T06:02:24+08:00">
-                2021-03-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-18T08:50:00+08:00">
+                2020-05-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="背景问题"><a href="#背景问题" class="headerlink" title="背景问题"></a>背景问题</h1><p>公司需要对用户的行为做分析<br>所以在服务端上通过 HTTP 的方式上报数据</p>
+<p>想要将上报数据的网关容器化了<br>方面以后的维护和管理</p>
+<p>因为节点少, 相对于 K8S 来说太重了.<br>所以准备尝试一下 Docker Swarm</p>
+<p>没想到在测试环境没问题, 一上生产.<br>结果立马出现了一大堆上报失败的错误</p>
+<p>吓的我立马回滚了操作, 再慢慢来排查.</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/b078bce7c017421483ca473014d6f081/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/a4f387bec6bc469db9a65aff81e63b6c/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/a4f387bec6bc469db9a65aff81e63b6c/" itemprop="url">使用nginx代理跨机房的saltstack使用</a></h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-10T09:37:00+08:00">
+                2020-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>我们是游戏研发公司, 需要和不同的发行商合作运营<br>而且很多发行商要求使用自己的服务器(毕竟自己控制更可靠)<br>所以就出现了这么一种情况</p>
+<p>业务不大, 但是不同云厂和区域的服务器不少.<br>并且我们使用 SaltStack 来管理主机的信息.<br>从主机的注册到作业的执行, 基本上是这样的</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">salt-master&lt;-----&gt;nginx-stream&lt;-----&gt;salt-minion</span><br></pre></td></tr></table></figure>
+<p>这里为啥使用 nginx-stream, 而不是 salt-syndic<br>主要是因为简单, 稳定, 而且 salt-syndic 无法针对单个 minion 下发 job</p>
+<p>把 nginx 部署在<code>docker swarm</code>上<br>有一个区域就添加一个<code>docker worker</code>, 然后自动的部署上去了</p>
+<p>大概的思路是这样的, 然而在部署好了后使用<code>salt &#39;h72g9g19vr391.qcloud.hk&#39; test.ping</code><br>有时正常, 有时却返回超时</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/a4f387bec6bc469db9a65aff81e63b6c/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/faa6264186c549e2872823cad0749b68/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/faa6264186c549e2872823cad0749b68/" itemprop="url">nginx的mirror模块请求返回400状态</a></h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-10T09:37:00+08:00">
+                2020-05-10
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>突然被抓来协助大数据的上报网关(OpenResty)</p>
+<p>client -&gt; OpenResty -&gt; Kafka -&gt; ClickHouse</p>
+<p>这里的 OpenResty 负责数据的兼容, 过滤, 路由</p>
+<p>因为需要经常的修改 OpenResty 的逻辑配合数据分析这边的需求<br>导致改动容易出现问题, 需要搞个测试环境.<br>通过测试环境的验证后, 在更新到正式环境</p>
+<p>实施方案是使用 nginx 的 mirror 模块将请求镜像到测试站点.<br>同样的代码和配置, 通过环境变量来区分生产和测试环境</p>
+<p>大概是这样的.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">                                (不返回client)</span><br><span class="line">client &lt;-------------&gt; nginx &lt;-------------&gt; mirror</span><br></pre></td></tr></table></figure>
+<p>那么问题来了<br>在实施中, 请求主站点时, 镜像站点也能收到请求<br>但一直显示<code>status_code 400</code>, 从表现上来看像是 POST 的数据丢失了.<br>在 nginx 的 log_format 把<code>$request_body</code>参数加上, 发现确实 POST 数据没有.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">172.19.0.1 - [08/May/2020:06:35:09] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br><span class="line">172.19.0.1 - [08/May/2020:07:01:09] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br><span class="line">172.19.0.1 - [08/May/2020:07:02:43] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/faa6264186c549e2872823cad0749b68/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/1a05d579266a40bb9785b91b8de3fe70/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/1a05d579266a40bb9785b91b8de3fe70/" itemprop="url">客户端业务异常上报监控</a></h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-04-03T12:09:00+08:00">
+                2020-04-03
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>我们是一家 H5 的游戏公司<br>客户端以网页, 小程序, APP 的方式发布<br>对 CDN 的请求非常的大, 所以 CDN 请求的影响是非常大的.</p>
+<h1 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h1><p>其实一开始是想放在 <a href="/2020/05/02/服务端业务异常日志监控/">服务端业务异常日志监控</a> 一起讲的<br>然而因为这里有一些情况不太一样, 细讲起来差异还挺大的.<br>所以这里就拆开单独写了(真的不是为了凑数!!!)</p>
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
+<li>客户端请求 CDN 卡顿</li>
+<li>客户端请求服务端卡顿</li>
+<li>客户端代码异常</li>
+</ol>
+<h1 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h1><p>elasticsearch, 存储检索<br>logstash, 上报格式转换<br>kibana, 统计展示<br>openresty, 上报网关<br>(和”隔壁”的架构差不多, 只是用 openresty 替代了 filebeat)</p>
+<p>看图…</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/1a05d579266a40bb9785b91b8de3fe70/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/993b27b34e7a4165a667a75dcf128296/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/993b27b34e7a4165a667a75dcf128296/" itemprop="url">业务监控整理总结</a></h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-19T02:33:00+08:00">
+                2020-03-19
               </time>
             
 
@@ -346,7 +861,7 @@
 <p>所以我们使用<code>总用户数</code>作为比较的指标</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2021/03/10/993b27b34e7a4165a667a75dcf128296/#more" rel="contents">
+            <a class="btn" href="/993b27b34e7a4165a667a75dcf128296/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -397,7 +912,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/faa6264186c549e2872823cad0749b68/">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/f2293fe655bd4009a7eef9c1fdff8dc5/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ZhiWei">
@@ -416,7 +931,7 @@
         
           <h2 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/03/10/faa6264186c549e2872823cad0749b68/" itemprop="url">nginx的mirror模块请求返回400状态</a></h2>
+                <a class="post-title-link" href="/f2293fe655bd4009a7eef9c1fdff8dc5/" itemprop="url">服务端业务异常日志监控</a></h2>
         
 
         <div class="post-meta">
@@ -429,8 +944,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T05:55:34+08:00">
-                2021-03-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-03-12T09:03:00+08:00">
+                2020-03-12
               </time>
             
 
@@ -468,18 +983,11 @@
 
       
         
-          <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>突然被抓来协助大数据的上报网关(OpenResty)</p>
-<p>client -&gt; OpenResty -&gt; Kafka -&gt; ClickHouse</p>
-<p>这里的 OpenResty 负责数据的兼容, 过滤, 路由</p>
-<p>因为需要经常的修改 OpenResty 的逻辑配合数据分析这边的需求<br>导致改动容易出现问题, 需要搞个测试环境.<br>通过测试环境的验证后, 在更新到正式环境</p>
-<p>实施方案是使用 nginx 的 mirror 模块将请求镜像到测试站点.<br>同样的代码和配置, 通过环境变量来区分生产和测试环境</p>
-<p>大概是这样的.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">                                (不返回client)</span><br><span class="line">client &lt;-------------&gt; nginx &lt;-------------&gt; mirror</span><br></pre></td></tr></table></figure>
-<p>那么问题来了<br>在实施中, 请求主站点时, 镜像站点也能收到请求<br>但一直显示<code>status_code 400</code>, 从表现上来看像是 POST 的数据丢失了.<br>在 nginx 的 log_format 把<code>$request_body</code>参数加上, 发现确实 POST 数据没有.</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">172.19.0.1 - [08/May/2020:06:35:09] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br><span class="line">172.19.0.1 - [08/May/2020:07:01:09] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br><span class="line">172.19.0.1 - [08/May/2020:07:02:43] &quot;POST /user_login HTTP/1.0&quot; 400 419 &quot;-&quot;</span><br></pre></td></tr></table></figure>
+          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>我们是一家 H5 的游戏公司<br>多数项目的服务端使用 SKYNET+LUA 的形式开发<br>协议层走的的 websocket</p>
+<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">一般情况下我们都是走这样的流程</span><br><span class="line"></span><br><span class="line">1. 业务更新版本</span><br><span class="line">2. 等待用户反馈问题</span><br><span class="line">3. 判断客户端还是服务端</span><br><span class="line">4. 根据用户信息查看日志</span><br><span class="line">5. 修复BUG更新版本</span><br><span class="line"></span><br><span class="line">解决问题被动而且效率低下.</span><br><span class="line">大量体验不好的用户直接流失.</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2021/03/10/faa6264186c549e2872823cad0749b68/#more" rel="contents">
+            <a class="btn" href="/f2293fe655bd4009a7eef9c1fdff8dc5/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -530,7 +1038,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/ffb30a139e094665af16e5314e55883d/">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/c5cdc0da435e494f8037967c4df7af78/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ZhiWei">
@@ -549,7 +1057,7 @@
         
           <h2 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/03/10/ffb30a139e094665af16e5314e55883d/" itemprop="url">错误的HTTP头解析引发的故障</a></h2>
+                <a class="post-title-link" href="/c5cdc0da435e494f8037967c4df7af78/" itemprop="url">2019年的工作整理总结</a></h2>
         
 
         <div class="post-meta">
@@ -562,8 +1070,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T05:43:37+08:00">
-                2021-03-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-02-07T10:27:00+08:00">
+                2020-02-07
               </time>
             
 
@@ -601,20 +1109,16 @@
 
       
         
-          <h1 id="问题背景"><a href="#问题背景" class="headerlink" title="问题背景"></a>问题背景</h1><p>我们是一家 H5 的研发公司.<br>运营突然报业务故障, 玩家登录不了(监控没做好, 真的是没人啊..)<br>点击进入游戏时转圈圈, 提示<code>连接超时</code>(找不到图了, 发挥一下想象吧)</p>
-<h1 id="排查思路"><a href="#排查思路" class="headerlink" title="排查思路"></a>排查思路</h1><p>经过我们的沟通, 得出信息</p>
-<ol>
-<li>只有 IOS 的用户有问题</li>
-<li>只有某个特殊渠道有问题</li>
-<li>同样的手机访问其他游戏没问题</li>
-<li>同样的账号换手机登录没问题</li>
-<li>没有更新版本和变动</li>
-</ol>
-<p>这样来看, 肯定是渠道方更新了什么导致的故障</p>
-<p>客户端只有连接超时的信息.<br>服务端上只有一行<code>http hand failed</code>, 没有任何其他信息</p>
+          <h1 id="2019-年终整理"><a href="#2019-年终整理" class="headerlink" title="2019 年终整理"></a>2019 年终整理</h1><h2 id="运维平台"><a href="#运维平台" class="headerlink" title="运维平台"></a>运维平台</h2><h3 id="CMDB"><a href="#CMDB" class="headerlink" title="CMDB"></a>CMDB</h3><p>我们目前已经接入了腾讯云的 dntg 项目</p>
+<p>通过 canal+kafka 和额外的监控保证数据的及时性和准确性</p>
+<p>在多项目和多云环境上还需要进行迭代完善</p>
+<h3 id="维护功能"><a href="#维护功能" class="headerlink" title="维护功能"></a>维护功能</h3><p>正常的发展应该是 <code>手工-&gt;脚本-&gt;平台-&gt;自动化</code> 这个流程</p>
+<p>然而我们直接抛开了<code>平台</code>这个阶段, 直接做了自动化.</p>
+<p>导致我们后期的工作不好展开(主要是标准化的问题)</p>
+<p>所以要将标准化的优先级提高</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2021/03/10/ffb30a139e094665af16e5314e55883d/#more" rel="contents">
+            <a class="btn" href="/c5cdc0da435e494f8037967c4df7af78/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -665,7 +1169,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/f35cc21df4554c23b02a4f88da96fce6/">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/f38b2488baed4a5d88966be05d09d788/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ZhiWei">
@@ -684,7 +1188,7 @@
         
           <h2 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/03/10/f35cc21df4554c23b02a4f88da96fce6/" itemprop="url">业务的自动化部署</a></h2>
+                <a class="post-title-link" href="/f38b2488baed4a5d88966be05d09d788/" itemprop="url">阿里云ASK踩坑记录</a></h2>
         
 
         <div class="post-meta">
@@ -697,8 +1201,141 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T05:40:43+08:00">
-                2021-03-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-01-12T07:11:00+08:00">
+                2020-01-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>Ask 是 K8S 的一种特殊扩展, 它屏蔽了 node 层, 按 pod 收费.</p>
+<p>这样可以实现低成本和弹性扩容, 在大规模的伸缩中极大的增加了效率和降低了成本</p>
+<p>弹性扩展, 用多少算多少, 听起来确实很美好.</p>
+<p>Ingress 本质上是一种抽象, 顾名思义, 就是所有请求的入口, 可以对请求进行控制和验证</p>
+<p>常用的是 nginx 实现的 ingress, 通过规则映射, 将站点信息抽象各位一个个的匹配规则</p>
+<p>接着, 我们有一个前端打点上报需求, 准备用阿里云的 ask 来做.</p>
+<p>只是一个很简单的通过 http 请求将数据上报至阿里云 SLS 的服务.</p>
+<p>没有状态, 存储之类的需求, 所以用 golang 写了一个简单的 api 来解决.</p>
+<p>万事俱备, 等待数据, 然而研发同学说不太对劲.</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/f38b2488baed4a5d88966be05d09d788/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/f35cc21df4554c23b02a4f88da96fce6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ZhiWei">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ZhiWei Show">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/f35cc21df4554c23b02a4f88da96fce6/" itemprop="url">业务的自动化部署</a></h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-12-20T10:30:00+08:00">
+                2019-12-20
               </time>
             
 
@@ -743,7 +1380,7 @@
 <p>PS: 只是部署, 不负责发布上线</p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2021/03/10/f35cc21df4554c23b02a4f88da96fce6/#more" rel="contents">
+            <a class="btn" href="/f35cc21df4554c23b02a4f88da96fce6/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -794,7 +1431,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/1a05d579266a40bb9785b91b8de3fe70/">
+    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2ab3d2be0894444e9be040312112088e/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ZhiWei">
@@ -813,7 +1450,7 @@
         
           <h2 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2021/03/10/1a05d579266a40bb9785b91b8de3fe70/" itemprop="url">客户端业务异常上报监控</a></h2>
+                <a class="post-title-link" href="/2ab3d2be0894444e9be040312112088e/" itemprop="url">Lua实现的hash合并功能</a></h2>
         
 
         <div class="post-meta">
@@ -826,267 +1463,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T05:37:05+08:00">
-                2021-03-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>我们是一家 H5 的游戏公司<br>客户端以网页, 小程序, APP 的方式发布<br>对 CDN 的请求非常的大, 所以 CDN 请求的影响是非常大的.</p>
-<h1 id="前提"><a href="#前提" class="headerlink" title="前提"></a>前提</h1><p>其实一开始是想放在 <a href="/2020/05/02/服务端业务异常日志监控/">服务端业务异常日志监控</a> 一起讲的<br>然而因为这里有一些情况不太一样, 细讲起来差异还挺大的.<br>所以这里就拆开单独写了(真的不是为了凑数!!!)</p>
-<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
-<li>客户端请求 CDN 卡顿</li>
-<li>客户端请求服务端卡顿</li>
-<li>客户端代码异常</li>
-</ol>
-<h1 id="方案"><a href="#方案" class="headerlink" title="方案"></a>方案</h1><p>elasticsearch, 存储检索<br>logstash, 上报格式转换<br>kibana, 统计展示<br>openresty, 上报网关<br>(和”隔壁”的架构差不多, 只是用 openresty 替代了 filebeat)</p>
-<p>看图…</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2021/03/10/1a05d579266a40bb9785b91b8de3fe70/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/f2293fe655bd4009a7eef9c1fdff8dc5/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ZhiWei">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ZhiWei Show">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/03/10/f2293fe655bd4009a7eef9c1fdff8dc5/" itemprop="url">服务端业务异常日志监控</a></h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T05:16:29+08:00">
-                2021-03-10
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>我们是一家 H5 的游戏公司<br>多数项目的服务端使用 SKYNET+LUA 的形式开发<br>协议层走的的 websocket</p>
-<h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">一般情况下我们都是走这样的流程</span><br><span class="line"></span><br><span class="line">1. 业务更新版本</span><br><span class="line">2. 等待用户反馈问题</span><br><span class="line">3. 判断客户端还是服务端</span><br><span class="line">4. 根据用户信息查看日志</span><br><span class="line">5. 修复BUG更新版本</span><br><span class="line"></span><br><span class="line">解决问题被动而且效率低下.</span><br><span class="line">大量体验不好的用户直接流失.</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2021/03/10/f2293fe655bd4009a7eef9c1fdff8dc5/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/10/2ab3d2be0894444e9be040312112088e/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ZhiWei">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ZhiWei Show">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/03/10/2ab3d2be0894444e9be040312112088e/" itemprop="url">Lua实现的hash合并功能</a></h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-10T05:13:01+08:00">
-                2021-03-10
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-11-08T10:35:00+08:00">
+                2019-11-08
               </time>
             
 
@@ -1192,330 +1570,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/08/34f2635ca876481da35832a0995e4875/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ZhiWei">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ZhiWei Show">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/03/08/34f2635ca876481da35832a0995e4875/" itemprop="url">flink启动job随机卡住故障排查</a></h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-08T11:09:34+08:00">
-                2021-03-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="故障表现"><a href="#故障表现" class="headerlink" title="故障表现"></a>故障表现</h1><p>在启动 job 时随机出现 checkpoint 无法完成的情况</p>
-<p>但只要 job 能够正常跑起来就一直都没有问题</p>
-<p>没有任何的错误日志</p>
-<p><img src="/resource/24eab53b368c4632b4220c7fa11e7770.png" alt="ce95965764a3fe6be318253fed181a72.png"></p>
-<p><img src="/resource/0ed70bc5087040f7bd36e520e636e130.png" alt="b6ec6decddba84e326d58318e69d1817.png"></p>
-<h1 id="背景环境"><a href="#背景环境" class="headerlink" title="背景环境"></a>背景环境</h1><p>在腾讯云的 k8s 上搭建的 flink standalone in k8s 模式, 版本是 flink:1.11.3</p>
-<p>Flink 的 CheckPoint 存储用的是腾讯云的 NFS</p>
-<h1 id="排查思路"><a href="#排查思路" class="headerlink" title="排查思路"></a>排查思路</h1><h2 id="猜测-怀疑是-NFS-的问题"><a href="#猜测-怀疑是-NFS-的问题" class="headerlink" title="猜测: 怀疑是 NFS 的问题"></a>猜测: 怀疑是 NFS 的问题</h2><p>直接去掉 NFS 挂载, 使用本地文件存储 checkpoint, 问题表现依旧</p>
-<p>故障和 nfs 存储无关</p>
-<h2 id="猜测-怀疑是部署环境导致的"><a href="#猜测-怀疑是部署环境导致的" class="headerlink" title="猜测: 怀疑是部署环境导致的"></a>猜测: 怀疑是部署环境导致的</h2><p>因为我们使用的是 helm 包安装的, 并且 k8s 里面有其他服务</p>
-<p>直接重新购买了一套独立 k8s 集群, 通过官方的 yaml 部署, 问题表现依旧</p>
-<p>故障和配置环境无关</p>
-<p>目前看来故障和配置, 环境, 存储无关</p>
-<h2 id="猜测-job-代码的问题"><a href="#猜测-job-代码的问题" class="headerlink" title="猜测: job 代码的问题"></a>猜测: job 代码的问题</h2><p>从 flink 官方上下载了 Example, 跑了十几次都没有问题</p>
-<p>基本确定是 job 代码的问题</p>
-<h2 id="告警日志的线索"><a href="#告警日志的线索" class="headerlink" title="告警日志的线索"></a>告警日志的线索</h2><p>仔细查看下 taskamanger 的日志, 发现了个重要的线索</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">2021-03-02 15:49:59,091 WARN  org.apache.flink.runtime.taskmanager.Task                    [] - Task &apos;Source: 配置广播流,GameId=17 (1/1)&apos; did not react to cancelling signal for 30 seconds, but is stuck in method:</span><br><span class="line"> sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line">sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)</span><br><span class="line">sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)</span><br><span class="line">java.lang.reflect.Constructor.newInstance(Constructor.java:423)</span><br><span class="line">java.lang.Class.newInstance(Class.java:442)</span><br><span class="line">java.util.ServiceLoader$LazyIterator.nextService(ServiceLoader.java:380)</span><br><span class="line">java.util.ServiceLoader$LazyIterator.next(ServiceLoader.java:404)</span><br><span class="line">java.util.ServiceLoader$1.next(ServiceLoader.java:480)</span><br><span class="line">java.sql.DriverManager$2.run(DriverManager.java:603)</span><br><span class="line">java.sql.DriverManager$2.run(DriverManager.java:583)</span><br><span class="line">java.security.AccessController.doPrivileged(Native Method)</span><br><span class="line">java.sql.DriverManager.loadInitialDrivers(DriverManager.java:583)</span><br><span class="line">java.sql.DriverManager.&lt;clinit&gt;(DriverManager.java:101)</span><br><span class="line">org.mariadb.jdbc.Driver.&lt;clinit&gt;(Driver.java:70)</span><br><span class="line">java.lang.Class.forName0(Native Method)</span><br><span class="line">java.lang.Class.forName(Class.java:264)</span><br><span class="line">org.apache.flink.connector.jdbc.internal.connection.SimpleJdbcConnectionProvider.getConnection(SimpleJdbcConnectionProvider.java:52)</span><br><span class="line">com.funjoy.flink.ConfigSourceFunction.open(ConfigSourceFunction.java:52)</span><br><span class="line">org.apache.flink.api.common.functions.util.FunctionUtils.openFunction(FunctionUtils.java:36)</span><br><span class="line">org.apache.flink.streaming.api.operators.AbstractUdfStreamOperator.open(AbstractUdfStreamOperator.java:102)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.OperatorChain.initializeStateAndOpenOperators(OperatorChain.java:291)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask.lambda$beforeInvoke$1(StreamTask.java:506)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask$$Lambda$621/13894355.run(Unknown Source)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTaskActionExecutor$SynchronizedStreamTaskActionExecutor.runThrowing(StreamTaskActionExecutor.java:92)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask.beforeInvoke(StreamTask.java:475)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask.invoke(StreamTask.java:526)</span><br><span class="line">org.apache.flink.runtime.taskmanager.Task.doRun(Task.java:721)</span><br><span class="line">org.apache.flink.runtime.taskmanager.Task.run(Task.java:546)</span><br><span class="line">java.lang.Thread.run(Thread.java:748)</span><br><span class="line"></span><br><span class="line">2021-03-02 15:50:29,065 WARN  org.apache.flink.runtime.taskmanager.Task                    [] - Task &apos;Source: 日数据流,GameId=17 (1/1)&apos; did not react to cancelling signal for 30 seconds, but is stuck in method:</span><br><span class="line"> ru.yandex.clickhouse.ClickHouseDriver.&lt;clinit&gt;(ClickHouseDriver.java:38)</span><br><span class="line">java.lang.Class.forName0(Native Method)</span><br><span class="line">java.lang.Class.forName(Class.java:264)</span><br><span class="line">org.apache.flink.connector.jdbc.internal.connection.SimpleJdbcConnectionProvider.getConnection(SimpleJdbcConnectionProvider.java:52)</span><br><span class="line">com.funjoy.flink.DailySourceFunction.open(DailySourceFunction.java:69)</span><br><span class="line">org.apache.flink.api.common.functions.util.FunctionUtils.openFunction(FunctionUtils.java:36)</span><br><span class="line">org.apache.flink.streaming.api.operators.AbstractUdfStreamOperator.open(AbstractUdfStreamOperator.java:102)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.OperatorChain.initializeStateAndOpenOperators(OperatorChain.java:291)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask.lambda$beforeInvoke$1(StreamTask.java:506)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask$$Lambda$621/13894355.run(Unknown Source)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTaskActionExecutor$SynchronizedStreamTaskActionExecutor.runThrowing(StreamTaskActionExecutor.java:92)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask.beforeInvoke(StreamTask.java:475)</span><br><span class="line">org.apache.flink.streaming.runtime.tasks.StreamTask.invoke(StreamTask.java:526)</span><br><span class="line">org.apache.flink.runtime.taskmanager.Task.doRun(Task.java:721)</span><br><span class="line">org.apache.flink.runtime.taskmanager.Task.run(Task.java:546)</span><br><span class="line">java.lang.Thread.run(Thread.java:748)</span><br></pre></td></tr></table></figure>
-<p>这么两个 waring, 基本上符合我们的故障现象,</p>
-<h2 id="怀疑是因为建立-clickhouse-连接时卡住了"><a href="#怀疑是因为建立-clickhouse-连接时卡住了" class="headerlink" title="怀疑是因为建立 clickhouse 连接时卡住了"></a>怀疑是因为建立 clickhouse 连接时卡住了</h2><p>因为 job 一直卡住了, 所以在执行 cancel 时无法处理, 超过 30 秒后直接出现 waring</p>
-<p>通过上面的堆栈, 发现是获取 clickhouse 和 mariadb 连接时出现的问题</p>
-<p>将连接 clickhouse 相关的代码注释后就正常了<br>所以基本上确定故障表现和连接 clickhouse 有一定关系.</p>
-<p>在卡住的时候我们通过其他客户端连接 clickhouse 正常, 所以故障和 clickhouse 服务无关</p>
-<p>我们找了阿里云的专家帮忙, 查看了 taskmanager 和 jobmanager 的日志后<br>建议我们在 checkpoint 卡住的时候用<code>jstack</code>查看下线程在做什么</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">Source: 日数据流,GameId=17 (1/1)&quot; #62 prio=5 os_prio=0 tid=0x00007f3da008d000 nid=0x156 in Object.wait() [0x00007f3e48fcb000]</span><br><span class="line">   java.lang.Thread.State: RUNNABLE</span><br><span class="line">    at ru.yandex.clickhouse.ClickHouseDriver.&lt;clinit&gt;(ClickHouseDriver.java:38)</span><br><span class="line">    at java.lang.Class.forName0(Native Method)</span><br><span class="line">    at java.lang.Class.forName(Class.java:264)</span><br><span class="line">    at org.apache.flink.connector.jdbc.internal.connection.SimpleJdbcConnectionProvider.getConnection(SimpleJdbcConnectionProvider.java:52)</span><br><span class="line">    - locked &lt;0x00000007db8a3bf8&gt; (a org.apache.flink.connector.jdbc.internal.connection.SimpleJdbcConnectionProvider)</span><br><span class="line">    at com.funjoy.flink.DailySourceFunction.open(DailySourceFunction.java:69)</span><br><span class="line">    at org.apache.flink.api.common.functions.util.FunctionUtils.openFunction(FunctionUtils.java:36)</span><br><span class="line">    at org.apache.flink.streaming.api.operators.AbstractUdfStreamOperator.open(AbstractUdfStreamOperator.java:102)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.OperatorChain.initializeStateAndOpenOperators(OperatorChain.java:291)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask.lambda$beforeInvoke$1(StreamTask.java:506)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask$$Lambda$617/1628357580.run(Unknown Source)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTaskActionExecutor$SynchronizedStreamTaskActionExecutor.runThrowing(StreamTaskActionExecutor.java:92)</span><br><span class="line">    - locked &lt;0x00000007db8a3e00&gt; (a java.lang.Object)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask.beforeInvoke(StreamTask.java:475)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask.invoke(StreamTask.java:526)</span><br><span class="line">    at org.apache.flink.runtime.taskmanager.Task.doRun(Task.java:721)</span><br><span class="line">    at org.apache.flink.runtime.taskmanager.Task.run(Task.java:546)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:748)</span><br></pre></td></tr></table></figure>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">Source: 配置广播流,GameId=17 (1/1)&quot; #63 prio=5 os_prio=0 tid=0x00007f3da008f000 nid=0x157 in Object.wait() [0x00007f3e48ec8000]</span><br><span class="line">   java.lang.Thread.State: RUNNABLE</span><br><span class="line">    at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line">    at sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)</span><br><span class="line">    at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)</span><br><span class="line">    at java.lang.reflect.Constructor.newInstance(Constructor.java:423)</span><br><span class="line">    at java.lang.Class.newInstance(Class.java:442)</span><br><span class="line">    at java.util.ServiceLoader$LazyIterator.nextService(ServiceLoader.java:380)</span><br><span class="line">    at java.util.ServiceLoader$LazyIterator.next(ServiceLoader.java:404)</span><br><span class="line">    at java.util.ServiceLoader$1.next(ServiceLoader.java:480)</span><br><span class="line">    at java.sql.DriverManager$2.run(DriverManager.java:603)</span><br><span class="line">    at java.sql.DriverManager$2.run(DriverManager.java:583)</span><br><span class="line">    at java.security.AccessController.doPrivileged(Native Method)</span><br><span class="line">    at java.sql.DriverManager.loadInitialDrivers(DriverManager.java:583)</span><br><span class="line">    at java.sql.DriverManager.&lt;clinit&gt;(DriverManager.java:101)</span><br><span class="line">    at org.mariadb.jdbc.Driver.&lt;clinit&gt;(Driver.java:70)</span><br><span class="line">    at java.lang.Class.forName0(Native Method)</span><br><span class="line">    at java.lang.Class.forName(Class.java:264)</span><br><span class="line">    at org.apache.flink.connector.jdbc.internal.connection.SimpleJdbcConnectionProvider.getConnection(SimpleJdbcConnectionProvider.java:52)</span><br><span class="line">    - locked &lt;0x00000007db8a35c0&gt; (a org.apache.flink.connector.jdbc.internal.connection.SimpleJdbcConnectionProvider)</span><br><span class="line">    at com.funjoy.flink.ConfigSourceFunction.open(ConfigSourceFunction.java:52)</span><br><span class="line">    at org.apache.flink.api.common.functions.util.FunctionUtils.openFunction(FunctionUtils.java:36)</span><br><span class="line">    at org.apache.flink.streaming.api.operators.AbstractUdfStreamOperator.open(AbstractUdfStreamOperator.java:102)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.OperatorChain.initializeStateAndOpenOperators(OperatorChain.java:291)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask.lambda$beforeInvoke$1(StreamTask.java:506)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask$$Lambda$617/1628357580.run(Unknown Source)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTaskActionExecutor$SynchronizedStreamTaskActionExecutor.runThrowing(StreamTaskActionExecutor.java:92)</span><br><span class="line">    - locked &lt;0x00000007db8a37a0&gt; (a java.lang.Object)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask.beforeInvoke(StreamTask.java:475)</span><br><span class="line">    at org.apache.flink.streaming.runtime.tasks.StreamTask.invoke(StreamTask.java:526)</span><br><span class="line">    at org.apache.flink.runtime.taskmanager.Task.doRun(Task.java:721)</span><br><span class="line">    at org.apache.flink.runtime.taskmanager.Task.run(Task.java:546)</span><br><span class="line">    at java.lang.Thread.run(Thread.java:748)</span><br></pre></td></tr></table></figure>
-<h1 id="定位问题"><a href="#定位问题" class="headerlink" title="定位问题"></a>定位问题</h1><p>从上面的堆栈来看和 waring 的信息一样, 可以确认线程确实卡在这了, 而且是和 clickhouse 连接有关系</p>
-<h2 id="猜测-clickhouse-jdbc-连接库的问题"><a href="#猜测-clickhouse-jdbc-连接库的问题" class="headerlink" title="猜测: clickhouse-jdbc 连接库的问题"></a>猜测: clickhouse-jdbc 连接库的问题</h2><p>将 clickhouse-jdbc:0.2.4 升级到 clickhouse-jdbc:0.2.6 后故障依旧<br>既然不是 clickhouse 库的问题, 那就在上一层</p>
-<p>查看 SimpleJdbcConnectionProvider 的类是 flink-connector-jdbc 包中定义<br>这个包是和 flink 的版本保持一致的, 所以直接将 flink 从 1.11.3 升级到 1.12.1</p>
-<p>测试了十几次都表现正常.<br>应该就是这个问题了</p>
-<p>在 github 上找到 flink 1.12.1 版本的 SimpleJdbcConnectionProvider 变更记录<br><a href="https://github.com/apache/flink/commit/84ed65356fe61e6ba74a7e4c4aef0dbd3c63f44a#diff-6f7c06757b08d5926f28b33a47ce6463ce1d221470cf8ce053a207de15f2c156" target="_blank" rel="noopener">github</a></p>
-<p>发现确实有这个 bug, 已经有大佬修复了这个问题.</p>
-<p>至此整个故障问题已经确认</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>一开始应该关注日志方面, 但是研发一直纠结是配置和环境的问题<br>所以在配置和环境上花费了很多时间.</p>
-<p>对 java 不太熟悉, 从日志中的两个 waring 应该能定位到问题.</p>
-<p>故障表现起来有一定的随机性, 所有验证起来很浪费时间</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://zhiwei.show/2021/03/08/b4cc7846cded4ac091be89590b09f75d/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="ZhiWei">
-      <meta itemprop="description" content>
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="ZhiWei Show">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2021/03/08/b4cc7846cded4ac091be89590b09f75d/" itemprop="url">clickhouse啊, 你很快嘛</a></h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2021-03-08T02:09:17+08:00">
-                2021-03-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h1 id="是什么"><a href="#是什么" class="headerlink" title="是什么"></a>是什么</h1><p>从使用角度来看是一个分析型数据库</p>
-<p>从实现角度来看是一个列式数据库系统</p>
-<h2 id="分析型数据库和事务型数据库"><a href="#分析型数据库和事务型数据库" class="headerlink" title="分析型数据库和事务型数据库"></a>分析型数据库和事务型数据库</h2><p>字面意思是为了分析数据的数据库, 特点是需要存储的数据非常多</p>
-<p>但是对数据的一致性没有要求, 因为分析数据后看的是趋势, 小部分数据的错误不影响总体的趋势</p>
-<p>相对应的是事务型数据库</p>
-<h2 id="事务是什么"><a href="#事务是什么" class="headerlink" title="事务是什么"></a>事务是什么</h2><p>简单来说, 是不可分离的多个动作</p>
-<p>讲到事务就不得不讲讲事务四个特性</p>
-<p>原子性, 要么都成功, 要么都失败<br>一致性, 同一个事务中, 多次查询的数据要一致<br>隔离性, 每个事务要尽可能的不影响其他事务<br>持久性, 写入后不能丢失数据</p>
-<p>事务性数据库对一致性要求很高</p>
-<p>分析型数据库对海量数据要求很高</p>
-<p>分析型的数据库一般没有<code>一致性</code>, <code>隔离性</code>, <code>原子性</code>, 但是肯定会有<code>持久性</code></p>
-<h1 id="什么是列式数据库"><a href="#什么是列式数据库" class="headerlink" title="什么是列式数据库"></a>什么是列式数据库</h1><p>比如有三条记录</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1,clickhouse,database</span><br><span class="line">2,mysql,database</span><br><span class="line">3,nginx,web</span><br></pre></td></tr></table></figure>
-<p>如果我们按照每行进行存储, 那就是行式数据库</p>
-<p>比如这样存储:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1,clickhouse,database|2,mysql,database|3,nginx,web</span><br></pre></td></tr></table></figure>
-<p>而我们在分析数据的时候经常会选取几列的数据进行统计分析</p>
-<p>如果是行式存储的话, 会将整条的数据也一并读取出来(核心思想是减少</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">1,2,3|clickhouse,mysql,nginx|database,database,web</span><br></pre></td></tr></table></figure>
-<p>而如果是列式数据库, 则只会读取相关列的数据</p>
-<p>通常随着数据的增大, 磁盘的 IO 会首先出现瓶颈.</p>
-<p>采用列式数据库能够的大量减少读取的数据</p>
-<p>并且在因为每列的数据类型都是相同的, 所以每列都能压缩数据, 减少存储大小</p>
-<p>因为总数据量的减少, 所以在磁盘 IO 又进一步的降低了.</p>
-<p>但是涉及到压缩和解压, 导致相比于其他数据库会使用更多的 CPU 资源</p>
-<p>所以, <code>clickhouse大部分情况下都是CPU先跑满, 而磁盘IO方面不会成为瓶颈</code></p>
-<h1 id="分布式数据库"><a href="#分布式数据库" class="headerlink" title="分布式数据库?"></a>分布式数据库?</h1><p>这样说可能不对劲, 因为 clickhouse 的分布式是体现在 table 层的.</p>
-<p>打个比方, 我们有 10 万条数据, 两个节点, 不考虑双副本的情况下(高可用)</p>
-<p>将 5 万条数据存入节点 1, 另 5 万条数据存入节点 2</p>
-<p>这个存储数据的东西叫做本地表, 是保存了实实在在的数据</p>
-<p>另外通过创建分布式表将本地表关联起来, 从而实现分片的效果</p>
-<p>我们查询数据的时候直接实用分布式表名, 分布式表会自动帮我们去每个本地表上查询数据</p>
-<p>然后在进行聚合汇总</p>
-<p>那我们写数据的时候也写入分布式表吗?</p>
-<h2 id="分片和负载均衡"><a href="#分片和负载均衡" class="headerlink" title="分片和负载均衡"></a>分片和负载均衡</h2><p>clickhouse 分片和其他分布式集群有点不太一样.</p>
-<p>我们确实可以将数据写入分布式表</p>
-<p>但是规模上来了后不太推荐这种做法, 主要是性能的问题.</p>
-<p>分布式表写入会额外将数据写入当前收到请求的节点, 然后再将数据写入相应的分片</p>
-<p>推荐写入数据的方式是, 通过负载均衡将数据写入不同的分片</p>
-<p>从逻辑上来说, 每个分片是相互独立的数据</p>
-<p>具体的数据分布情况要看负载均衡的调度策略, 以及每次写入 batch 的大小</p>
-<p>这个需要在业务使用中多加注意</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>非常适合用来做用户行为分析</p>
-<p>大部分应用的瓶颈都在 IO 上, clickhouse 的架构设计避开了这点</p>
-<p>最大限度的利用了多核的优势, 比如从磁盘读取数据后的并行解压, 以及数据分片的使用</p>
-<p>但是在查询使用过程中需要做一些兼容.</p>
-<h1 id="一个大胆的想法"><a href="#一个大胆的想法" class="headerlink" title="一个大胆的想法"></a>一个大胆的想法</h1><p>既然 clickhouse 能够存储大量的数据并且把数据压缩起来.</p>
-<p>是不是可以将游戏通信中的数据存入 clickhouse 中.</p>
-<p>这样可以分析游戏中的<code>热点请求</code>以及, 帮助游戏<code>排查业务Bug</code></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1566,21 +1620,12 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-count">20</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
             
 
-            
-              
-              
-              <div class="site-state-item site-state-categories">
-                <a href="/categories/index.html">
-                  <span class="site-state-item-count">9</span>
-                  <span class="site-state-item-name">categories</span>
-                </a>
-              </div>
             
 
             
@@ -1588,7 +1633,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">40</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
